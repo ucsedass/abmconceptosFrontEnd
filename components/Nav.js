@@ -1,5 +1,6 @@
 import React from "react";
-import { Box } from "@chakra-ui/layout";
+
+import { Box } from "@chakra-ui/react";
 const Nav = () => {
   return (
     <Box w="100%" bg="blue.300" h="50px">

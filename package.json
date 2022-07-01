@@ -1,26 +1,33 @@
 {
-  "name": "abmconceptos",
-  "version": "0.1.0",
+  "name": "reservasaulas",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "export": "next export"
   },
   "dependencies": {
-    "@chakra-ui/react": "^2.2.1",
+    "@chakra-ui/react": "^1.8.1",
     "@emotion/react": "^11.7.1",
-    "@emotion/styled": "^11.9.3",
-    "framer-motion": "^6.2.3",
-    "next": "12.2.0",
-    "react": "18.2.0",
-    "react-data-table-component": "^7.5.2",
-    "react-dom": "18.2.0",
-    "styled-components": "^5.3.5"
+    "@emotion/styled": "^11.6.0",
+    "docker": "^1.0.0",
+    "framer-motion": "^5.6.0",
+    "next": "12.0.10",
+    "next-redux-wrapper": "^7.0.5",
+    "react": "17.0.2",
+    "react-data-table-component": "^7.4.7",
+    "react-dom": "17.0.2",
+    "react-icons": "^4.3.1",
+    "react-redux": "^7.2.6",
+    "redux": "^4.1.2",
+    "redux-devtools-extension": "^2.13.9",
+    "redux-thunk": "^2.4.1",
+    "styled-component": "^2.8.0",
+    "styled-components": "^5.3.3"
   },
   "devDependencies": {
-    "eslint": "8.18.0",
-    "eslint-config-next": "12.2.0"
+    "eslint": "8.8.0",
+    "eslint-config-next": "12.0.10"
   }
 }
