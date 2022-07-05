@@ -20,6 +20,10 @@ const Inicio = () => {
   const [modalConceptos, setModalConceptos] = useState(false);
   const [modalCursos, setModalCursos] = useState(false);
 
+  const [nombreConcepto, setNombreConcepto] = useState("");
+  const [descripcionConcepto, setDescripcionConcepto] = useState("");
+  const [fechaConcepto, setFechaConcepto] = useState("");
+
   const columnasConceptos = [
     {
       name: "NOMBRE ",
@@ -59,26 +63,7 @@ const Inicio = () => {
     },
   ];
 
-  const datosConceptos = [
-    {
-      id: 1,
-      nombre: "Estadistica aplicada a la genética forense PUBLICO-GENERAL",
-      descripcion: "Destinado a medicos, biólogos y publico en general",
-      fecha: "10/02/2022",
-    },
-    {
-      id: 2,
-      nombre: "Estadistica aplicada a la genética forense DOCENTES",
-      descripcion: "dedicado solo a docentes",
-      fecha: "14/05/2022",
-    },
-    {
-      id: 3,
-      nombre: "Estadistica aplicada a la genética forense ALUMNOS",
-      descripcion: "Dedicado solo a alumnos",
-      fecha: "19/07/2022",
-    },
-  ];
+  const datosConceptos = [];
 
   const datosCursos = [
     {
@@ -94,6 +79,15 @@ const Inicio = () => {
       fecha: "14/05/2022",
     },
   ];
+
+  datosCursos.push({
+    id: 4,
+    nombre: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    descripcion: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    fecha: "10/02/2022",
+  });
+
+  console.log(datosCursos);
 
   return (
     <>
@@ -143,15 +137,35 @@ const Inicio = () => {
           <ModalBody>
             <FormControl mb={2}>
               <FormLabel>Nombre</FormLabel>
-              <Input size="sm" id="nombre" />
+              <Input
+                size="sm"
+                name="nombreConcepto"
+                value={nombreConcepto}
+                onChange={(e) => {
+                  setNombreConcepto(e.target.value);
+                }}
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Descripcion</FormLabel>
-              <Input size="sm" id="descripcion" />
+              <Input
+                size="sm"
+                id="descripcionConcepto"
+                onChange={(e) => {
+                  setDescripcionConcepto(e.target.value);
+                }}
+              />
             </FormControl>
             <FormControl>
               <FormLabel>Fecha</FormLabel>
-              <Input size="sm" type="date" />
+              <Input
+                size="sm"
+                type="date"
+                name="fechaConcepto"
+                onChange={(e) => {
+                  setFechaConcepto(e.target.value);
+                }}
+              />
             </FormControl>
           </ModalBody>
           <ModalFooter>
@@ -164,7 +178,20 @@ const Inicio = () => {
             >
               Cerrar
             </Button>
-            <Button colorScheme="green">guardar</Button>
+            <Button
+              colorScheme="green"
+              onClick={() => {
+                datosConceptos.push({
+                  nombre: "nombreConcepto",
+                  descripcion: "descripcionConcepto",
+                  fecha: " fechaConcepto",
+                });
+
+                console.log("datos", datosConceptos);
+              }}
+            >
+              guardar
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
