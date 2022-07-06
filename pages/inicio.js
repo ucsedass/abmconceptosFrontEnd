@@ -16,14 +16,13 @@ import {
 } from "@chakra-ui/react";
 import Tabla from "react-data-table-component";
 const Inicio = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [modalConceptos, setModalConceptos] = useState(false);
   const [modalCursos, setModalCursos] = useState(false);
-
   const [nombreConcepto, setNombreConcepto] = useState("");
   const [descripcionConcepto, setDescripcionConcepto] = useState("");
   const [fechaConcepto, setFechaConcepto] = useState("");
-
+  const [datosConceptos, setDatosConceptos] = useState([]);
+  const [error, setError] = useState(false);
   const columnasConceptos = [
     {
       name: "NOMBRE ",
@@ -63,8 +62,6 @@ const Inicio = () => {
     },
   ];
 
-  const datosConceptos = [];
-
   const datosCursos = [
     {
       id: 1,
@@ -80,15 +77,21 @@ const Inicio = () => {
     },
   ];
 
-  datosCursos.push({
-    id: 4,
-    nombre: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    descripcion: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-    fecha: "10/02/2022",
-  });
-
-  console.log(datosCursos);
-
+  const agregarConcepto = () => {
+    if ([nombreConcepto, descripcionConcepto, fechaConcepto].includes("")) {
+      setError(true);
+    } else {
+      setModalConceptos(false);
+      setError(false);
+      const objetoConceptos = {
+        nombre: nombreConcepto,
+        descripcion: descripcionConcepto,
+        fecha: fechaConcepto,
+      };
+      setDatosConceptos([...datosConceptos, objetoConceptos]);
+    }
+  };
+  console.log("datos:", datosConceptos);
   return (
     <>
       <Box mt={3} w="80%" mx="auto" border="solid 1px" p={3}>
@@ -135,6 +138,7 @@ const Inicio = () => {
           <ModalHeader>Grupo conceptos/eventos</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
+            {error && <Box bg="red.300">TODOS LOS CAMPOS SON OBLIGATORIOS</Box>}
             <FormControl mb={2}>
               <FormLabel>Nombre</FormLabel>
               <Input
@@ -151,6 +155,7 @@ const Inicio = () => {
               <Input
                 size="sm"
                 id="descripcionConcepto"
+                value={descripcionConcepto}
                 onChange={(e) => {
                   setDescripcionConcepto(e.target.value);
                 }}
@@ -161,6 +166,7 @@ const Inicio = () => {
               <Input
                 size="sm"
                 type="date"
+                value={fechaConcepto}
                 name="fechaConcepto"
                 onChange={(e) => {
                   setFechaConcepto(e.target.value);
@@ -181,13 +187,7 @@ const Inicio = () => {
             <Button
               colorScheme="green"
               onClick={() => {
-                datosConceptos.push({
-                  nombre: "nombreConcepto",
-                  descripcion: "descripcionConcepto",
-                  fecha: " fechaConcepto",
-                });
-
-                console.log("datos", datosConceptos);
+                agregarConcepto();
               }}
             >
               guardar
