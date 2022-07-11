@@ -12,24 +12,40 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Text,
 } from "@chakra-ui/react";
 import Tabla from "react-data-table-component";
 const Inicio = () => {
+  //ENEVTOS
   const [modalConceptos, setModalConceptos] = useState(false);
   const [modalCursos, setModalCursos] = useState(false);
   const [nombreConcepto, setNombreConcepto] = useState("");
   const [descripcionConcepto, setDescripcionConcepto] = useState("");
-  const [fechaConcepto, setFechaConcepto] = useState("");
   const [datosConceptos, setDatosConceptos] = useState([]);
-
+  const [codigoEvento, setCodigoEvento] = useState("");
+  const [habilitadoEvento, setHabilitadoEvento] = useState(true);
+  const [reqEmailEvento, setReqEmailEvento] = useState(true);
+  const [idEvento, setIdEvento] = useState(0);
+  //CURSOS
   const [datosCursos, setDatosCursos] = useState([]);
   const [codigo, setCodigo] = useState("");
   const [nombreCurso, setNombreCurso] = useState("");
   const [nombreSecCurso, setNombreSecCurso] = useState("");
   const [cupoMaximo, setCupoMaximo] = useState(0);
   const [emailResp, setEmailResp] = useState("");
+  const [fechaInicioCurso, setFechaInicioCurso] = useState("");
+  const [fechaFinCurso, setFechaFinCurso] = useState("");
+  const [habilitadoCurso, setHabilitadoCurso] = useState(true);
+  const [domicilioRefCurso, setDomicilioRefCurso] = useState("");
+  const [nombreContactoCurso, setNombreContactoCurso] = useState("");
+  const [urlUbicacionCurso, setUrlUbicacionCurso] = useState("");
+  const [reqEmailCurso, setReqEmailCurso] = useState(true);
+
+  //OTROS
   const [error, setError] = useState(false);
+  const [eventoActual, setEventoActual] = useState(0);
   const columnasConceptos = [
+    { name: "Codigo", selector: (row) => row.codigoEvento },
     {
       name: "Nombre ",
       selector: (row) => row.nombre,
@@ -37,24 +53,6 @@ const Inicio = () => {
     {
       name: "Descripcion",
       selector: (row) => row.descripcion,
-    },
-    {
-      name: "Fecha de inicio",
-      selector: (row) => row.fecha,
-    },
-    {
-      name: "",
-      cell: (row) => (
-        <Button
-          colorScheme="orange"
-          size="sm"
-          onClick={() => {
-            setModalCursos(true);
-          }}
-        >
-          Agregar curso
-        </Button>
-      ),
     },
   ];
   const columnasCursos = [
@@ -78,25 +76,34 @@ const Inicio = () => {
       name: "Email  Responsable",
       selector: (row) => row.emailResp,
     },
+    {
+      name: "Inicio",
+      //     selector : (row) =>row.fechaInicioCurso
+    },
+    {
+      name: "Fin",
+      //    selector : (row) =>row.fechaFinCurso
+    },
   ];
 
   const agregarConcepto = () => {
-    if ([nombreConcepto, descripcionConcepto, fechaConcepto].includes("")) {
+    if ([codigoEvento, nombreConcepto, descripcionConcepto].includes("")) {
       setError(true);
     } else {
       setModalConceptos(false);
       setError(false);
       const objetoConceptos = {
+        codigoEvento: codigoEvento,
         nombre: nombreConcepto,
         descripcion: descripcionConcepto,
-        fecha: fechaConcepto,
+        habilitadoEvento: habilitadoEvento,
+        reqEmailEvento: reqEmailEvento,
       };
       setDatosConceptos([...datosConceptos, objetoConceptos]);
     }
   };
 
   const agregarCurso = () => {
-    console.log("Ingreso a la funcion");
     if (
       [codigo, nombreCurso, nombreSecCurso, cupoMaximo, emailResp].includes("")
     ) {
@@ -112,10 +119,23 @@ const Inicio = () => {
         nombreSecCurso: nombreSecCurso,
         cupoMaximo: cupoMaximo,
         emailResp: emailResp,
+        fechaInicioCurso: fechaInicioCurso,
+        fechaFinCurso: fechaFinCurso,
+        habilitadoCurso: habilitadoCurso,
+        domicilioRefCurso: domicilioRefCurso,
+        nombreContactoCurso: nombreContactoCurso,
+        urlUbicacionCurso: urlUbicacionCurso,
+        reqEmailCurso: reqEmailCurso,
       };
       setDatosCursos([...datosCursos, objetoCursos]);
     }
   };
+
+  const clickear = (row, event) => {
+    setEventoActual(row.codigoEvento);
+  };
+  console.log("Evento para mandar a la API:", datosConceptos);
+  console.log("Cursos para mandar a la API", datosCursos);
   return (
     <>
       <Box mt={3} w="80%" mx="auto" border="solid 1px" p={3}>
@@ -123,9 +143,10 @@ const Inicio = () => {
           highlightOnHover
           pointerOnHover
           mt={2}
-          title="Conceptos"
+          title="Grupo de conceptos / Evento"
           columns={columnasConceptos}
           data={datosConceptos}
+          onRowClicked={clickear}
         />
 
         <Box>
@@ -139,7 +160,17 @@ const Inicio = () => {
             mt={3}
             size="sm"
           >
-            Agregar concepto
+            Agregar evento
+          </Button>
+          <Button
+            colorScheme="orange"
+            size="sm"
+            onClick={() => {
+              console.log("ESTE ES EL EVENTO : ", eventoActual);
+              setModalCursos(true);
+            }}
+          >
+            Agregar curso
           </Button>
         </Box>
         <Tabla
@@ -159,7 +190,7 @@ const Inicio = () => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Concepto/Curso</ModalHeader>
+          <ModalHeader>Concepto/Curso {eventoActual}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
@@ -217,6 +248,30 @@ const Inicio = () => {
                 }}
               />
             </FormControl>
+            <FormControl>
+              <FormLabel>Fecha de Inicio</FormLabel>
+              <Input
+                size="sm"
+                name="fechaInicioCurso"
+                value={fechaInicioCurso}
+                type="date"
+                onChange={(e) => {
+                  setFechaInicioCurso(e.target.value);
+                }}
+              />
+            </FormControl>
+            <FormControl>
+              <FormLabel>Fecha de Fin</FormLabel>
+              <Input
+                size="sm"
+                name="fechaFinCurso"
+                value={fechaFinCurso}
+                type="date"
+                onChange={(e) => {
+                  setFechaFinCurso(e.target.value);
+                }}
+              />
+            </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button
@@ -237,6 +292,11 @@ const Inicio = () => {
               guardar
             </Button>
           </ModalFooter>
+          <Box bg="green.100">
+            <p> *Fechas desde/hasta generan un nuevo registro??</p>
+            <p>* que es cantidad de unidades minimas??</p>
+            <p> * agregar boton de dar de alta arancel??</p>
+          </Box>
         </ModalContent>
       </Modal>
       <Modal
@@ -247,11 +307,22 @@ const Inicio = () => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Grupo conceptos/eventos</ModalHeader>
+          <ModalHeader>Grupo conceptos / Evento</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {error && <Box bg="red.300">TODOS LOS CAMPOS SON OBLIGATORIOS</Box>}
             <FormControl mb={2}>
+              <FormLabel> Codigo</FormLabel>
+              <Input
+                size="sm"
+                name="codigoEvento"
+                value={codigoEvento}
+                onChange={(e) => {
+                  setCodigoEvento(e.target.value);
+                }}
+              />
+            </FormControl>
+            <FormControl>
               <FormLabel>Nombre</FormLabel>
               <Input
                 size="sm"
@@ -270,18 +341,6 @@ const Inicio = () => {
                 value={descripcionConcepto}
                 onChange={(e) => {
                   setDescripcionConcepto(e.target.value);
-                }}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Fecha</FormLabel>
-              <Input
-                size="sm"
-                type="date"
-                value={fechaConcepto}
-                name="fechaConcepto"
-                onChange={(e) => {
-                  setFechaConcepto(e.target.value);
                 }}
               />
             </FormControl>
