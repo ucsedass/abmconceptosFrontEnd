@@ -15,6 +15,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import Tabla from "react-data-table-component";
+import clienteAxios from "../config/axios";
 const Inicio = () => {
   //ENEVTOS
   const [modalConceptos, setModalConceptos] = useState(false);
@@ -136,9 +137,15 @@ const Inicio = () => {
   };
   console.log("Evento para mandar a la API:", datosConceptos);
   console.log("Cursos para mandar a la API", datosCursos);
+  
+ 
+  
+ 
+  
   return (
     <>
       <Box mt={3} w="80%" mx="auto" border="solid 1px" p={3}>
+       
         <Tabla
           highlightOnHover
           pointerOnHover
