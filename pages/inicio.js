@@ -151,13 +151,10 @@ const Inicio = () => {
 
         <Box>
           <Button
-            mt={2}
-            mb={2}
             onClick={() => {
               setModalConceptos(true);
             }}
             colorScheme="green"
-            mt={3}
             size="sm"
           >
             Agregar evento
