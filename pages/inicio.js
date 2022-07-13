@@ -13,9 +13,12 @@ import {
   ModalBody,
   ModalCloseButton,
   Text,
+  Icon,
 } from "@chakra-ui/react";
 import Tabla from "react-data-table-component";
 import clienteAxios from "../config/axios";
+import Moment from "moment";
+import { FaRegCheckCircle, FaInfoCircle } from "react-icons/fa";
 const Inicio = () => {
   //ENEVTOS
   const [modalConceptos, setModalConceptos] = useState(false);
@@ -46,47 +49,101 @@ const Inicio = () => {
   const [error, setError] = useState(false);
   const [eventoActual, setEventoActual] = useState(0);
   const columnasConceptos = [
-    { name: "Codigo", selector: (row) => row.codigoEvento },
+    {
+      name: "Codigo",
+      selector: (row) => row.codigo,
+      width: "150px",
+    },
     {
       name: "Nombre ",
-      selector: (row) => row.nombre,
+      selector: (row) => row.Nombre,
+      width: "400px",
+      wrap: true,
     },
     {
       name: "Descripcion",
       selector: (row) => row.descripcion,
+      width: "400px",
+      wrap: true,
     },
   ];
   const columnasCursos = [
     {
       name: "Código",
       selector: (row) => row.codigo,
+      width: "150px",
     },
     {
       name: "Nombre Curso ",
-      selector: (row) => row.nombreCurso,
+      selector: (row) => row.nombre1,
+      width: "400px",
+      wrap: true,
     },
     {
       name: "Nombre Secundario",
-      selector: (row) => row.nombreSecCurso,
+      selector: (row) => row.nombre2,
+      width: "250px",
+      wrap: true,
     },
     {
       name: "Cupo Maximo",
       selector: (row) => row.cupoMaximo,
+      width: "100px",
+      center: "true",
     },
     {
       name: "Email  Responsable",
-      selector: (row) => row.emailResp,
+      selector: (row) => row.mailReferencia,
+      width: "250px",
     },
     {
       name: "Inicio",
-      //     selector : (row) =>row.fechaInicioCurso
+      selector: (row) => (
+        <div>{Moment(row.fechaInicio).format("DD-MM-YYYY ")}</div>
+      ),
+
+      width: "100px",
     },
     {
       name: "Fin",
-      //    selector : (row) =>row.fechaFinCurso
+      selector: (row) => (
+        <div>{Moment(row.fechaFin).format("DD-MM-YYYY ")}</div>
+      ),
+      width: "100px",
+    },
+
+    {
+      name: "",
+      cell: () => <Icon as={FaInfoCircle} color="blue.200" w={6} h={6} />,
     },
   ];
-
+  const estiloTablas = {
+    rowgroup: {
+      style: {
+        // override the row height
+      },
+    },
+    rows: {
+      style: {
+        minHeight: "30px",
+        // override the row height
+      },
+    },
+    headCells: {
+      style: {
+        paddingLeft: "8px", // override the cell padding for head cells
+        paddingRight: "8px",
+        paddingTop: "0px",
+        padingButton: "0px",
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: "8px", // override the cell padding for data cells
+        paddingRight: "8px",
+      },
+    },
+  };
   const agregarConcepto = () => {
     if ([codigoEvento, nombreConcepto, descripcionConcepto].includes("")) {
       setError(true);
@@ -133,19 +190,30 @@ const Inicio = () => {
   };
 
   const clickear = (row, event) => {
-    setEventoActual(row.codigoEvento);
+    console.log("AQUI VOS A CARGAR LOS CURSOS DEL EVENTO:", row.idGrupo);
+    clienteAxios
+      .get(`/cursosxevento/${row.idGrupo}`)
+      .then((respuesta) => {
+        console.log("funciono", respuesta.data);
+        setDatosCursos(respuesta.data);
+      })
+      .catch(() => {});
   };
-  console.log("Evento para mandar a la API:", datosConceptos);
-  console.log("Cursos para mandar a la API", datosCursos);
-  
- 
-  
- 
-  
+
+  useEffect(() => {
+    clienteAxios
+      .get("/grupocurso")
+      .then((respuesta) => {
+        console.log(respuesta.data);
+        setDatosConceptos(respuesta.data);
+        console.log(respuesta.data);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <>
       <Box mt={3} w="80%" mx="auto" border="solid 1px" p={3}>
-       
         <Tabla
           highlightOnHover
           pointerOnHover
@@ -154,10 +222,12 @@ const Inicio = () => {
           columns={columnasConceptos}
           data={datosConceptos}
           onRowClicked={clickear}
+          customStyles={estiloTablas}
         />
 
-        <Box>
+        <Box mt={5}>
           <Button
+            mr="4"
             onClick={() => {
               setModalConceptos(true);
             }}
@@ -183,6 +253,7 @@ const Inicio = () => {
           title="Cursos"
           columns={columnasCursos}
           data={datosCursos}
+          customStyles={estiloTablas}
         />
       </Box>
 
