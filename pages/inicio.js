@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+
 import {
   Box,
   FormControl,
@@ -14,11 +15,16 @@ import {
   ModalCloseButton,
   Text,
   Icon,
+  Tooltip,
 } from "@chakra-ui/react";
 import Tabla from "react-data-table-component";
 import clienteAxios from "../config/axios";
 import Moment from "moment";
-import { FaRegCheckCircle, FaInfoCircle } from "react-icons/fa";
+import {
+  FaRegCheckCircle,
+  FaInfoCircle,
+  FaMoneyCheckAlt,
+} from "react-icons/fa";
 const Inicio = () => {
   //ENEVTOS
   const [modalConceptos, setModalConceptos] = useState(false);
@@ -45,9 +51,14 @@ const Inicio = () => {
   const [urlUbicacionCurso, setUrlUbicacionCurso] = useState("");
   const [reqEmailCurso, setReqEmailCurso] = useState(true);
 
+  //ARANCELES
+  const [modalAranceles, setModalAranceles] = useState(false);
+
   //OTROS
   const [error, setError] = useState(false);
-  const [eventoActual, setEventoActual] = useState(0);
+  const [eventoActual, setEventoActual] = useState("");
+  const [cursoActual, setCursoActual] = useState("");
+
   const columnasConceptos = [
     {
       name: "Codigo",
@@ -111,10 +122,29 @@ const Inicio = () => {
       ),
       width: "100px",
     },
-
+    {
+      name: "",
+      cell: (row) => (
+        <Icon
+          as={FaMoneyCheckAlt}
+          color="green.200"
+          w={6}
+          h={6}
+          onClick={() => {
+            setModalAranceles(true);
+            console.log("curso", row.idCurso);
+            setCursoActual(row.idCurso);
+          }}
+        />
+      ),
+      width: "50px",
+      center: "true",
+    },
     {
       name: "",
       cell: () => <Icon as={FaInfoCircle} color="blue.200" w={6} h={6} />,
+      width: "50px",
+      center: "true",
     },
   ];
   const estiloTablas = {
@@ -236,6 +266,18 @@ const Inicio = () => {
           >
             Agregar evento
           </Button>
+        </Box>
+
+        <Tabla
+          highlightOnHover
+          pointerOnHover
+          title="Cursos"
+          columns={columnasCursos}
+          data={datosCursos}
+          customStyles={estiloTablas}
+        />
+
+        <Box mt={5}>
           <Button
             colorScheme="orange"
             size="sm"
@@ -247,14 +289,6 @@ const Inicio = () => {
             Agregar curso
           </Button>
         </Box>
-        <Tabla
-          highlightOnHover
-          pointerOnHover
-          title="Cursos"
-          columns={columnasCursos}
-          data={datosCursos}
-          customStyles={estiloTablas}
-        />
       </Box>
 
       <Modal
@@ -265,7 +299,7 @@ const Inicio = () => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Concepto/Curso {eventoActual}</ModalHeader>
+          <ModalHeader>Nuevo Curso {eventoActual}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
@@ -367,11 +401,11 @@ const Inicio = () => {
               guardar
             </Button>
           </ModalFooter>
-          <Box bg="green.100">
+          {/*<Box bg="green.100">
             <p> *Fechas desde/hasta generan un nuevo registro??</p>
             <p>* que es cantidad de unidades minimas??</p>
             <p> * agregar boton de dar de alta arancel??</p>
-          </Box>
+            </Box>*/}
         </ModalContent>
       </Modal>
       <Modal
@@ -439,6 +473,20 @@ const Inicio = () => {
               guardar
             </Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={modalAranceles}
+        onClose={() => {
+          setModalAranceles(false);
+        }}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalBody>
+            <p>aranceles {cursoActual}</p>
+          </ModalBody>
         </ModalContent>
       </Modal>
     </>
