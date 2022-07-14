@@ -15,12 +15,13 @@ import {
   ModalCloseButton,
   Text,
   Icon,
-  Tooltip,
+  HStack,
 } from "@chakra-ui/react";
 import Tabla from "react-data-table-component";
 import clienteAxios from "../config/axios";
 import Moment from "moment";
 import {
+  FaRegSave,
   FaRegCheckCircle,
   FaInfoCircle,
   FaMoneyCheckAlt,
@@ -53,11 +54,17 @@ const Inicio = () => {
 
   //ARANCELES
   const [modalAranceles, setModalAranceles] = useState(false);
+  const [datosAranceles, setDatosAranceles] = useState([]);
+  const [fechaDesdeAranceles, setFechaDesdeAranceles] = useState("");
+  const [fechaHastaAranceles, setFechaHastaAranceles] = useState("");
+  const [precioAranceles, setPrecioAranceles] = useState(0);
+  const [cantidadUnidadesMinima, setCantidadUnidadesMinima] = useState(0);
 
   //OTROS
   const [error, setError] = useState(false);
   const [eventoActual, setEventoActual] = useState("");
   const [cursoActual, setCursoActual] = useState("");
+  const [mostrarCargaArancel, setMostrarCargaArancel] = useState(false);
 
   const columnasConceptos = [
     {
@@ -130,9 +137,11 @@ const Inicio = () => {
           color="green.200"
           w={6}
           h={6}
+          cursor="pointer"
           onClick={() => {
+            traerAranceles(row.idCurso);
             setModalAranceles(true);
-            console.log("curso", row.idCurso);
+
             setCursoActual(row.idCurso);
           }}
         />
@@ -142,8 +151,40 @@ const Inicio = () => {
     },
     {
       name: "",
-      cell: () => <Icon as={FaInfoCircle} color="blue.200" w={6} h={6} />,
+      cell: () => (
+        <Icon as={FaInfoCircle} color="blue.200" w={6} h={6} cursor="pointer" />
+      ),
       width: "50px",
+      center: "true",
+    },
+  ];
+
+  const columnasAranceles = [
+    {
+      name: "Desde",
+      selector: (row) => (
+        <div>{Moment(row.FechaDesde).format("DD-MM-YYYY")}</div>
+      ),
+      width: "100px",
+      center: "true",
+    },
+    {
+      name: "Hasta",
+      selector: (row) => (
+        <div>{Moment(row.FechaHasta).format("DD-MM-YYYY")}</div>
+      ),
+      width: "100px",
+      center: "true",
+    },
+    {
+      name: "Precio",
+      selector: (row) => row.Precio,
+      width: "80px",
+      center: "true",
+    },
+    {
+      name: "Cant. U MIn",
+      selector: (row) => row.CantidadUnidadesMinima,
       center: "true",
     },
   ];
@@ -219,15 +260,8 @@ const Inicio = () => {
     }
   };
 
-  const clickear = (row, event) => {
-    console.log("AQUI VOS A CARGAR LOS CURSOS DEL EVENTO:", row.idGrupo);
-    clienteAxios
-      .get(`/cursosxevento/${row.idGrupo}`)
-      .then((respuesta) => {
-        console.log("funciono", respuesta.data);
-        setDatosCursos(respuesta.data);
-      })
-      .catch(() => {});
+  const clickear = (row) => {
+    traerCursos(row.idGrupo);
   };
 
   useEffect(() => {
@@ -240,10 +274,52 @@ const Inicio = () => {
       })
       .catch(() => {});
   }, []);
+  const traerCursos = (idGrupo) => {
+    clienteAxios
+      .get(`/cursosxevento/${idGrupo}`)
+      .then((respuesta) => {
+        console.log("funciono", respuesta.data);
+        setDatosCursos(respuesta.data);
+      })
+      .catch(() => {});
+  };
+
+  const traerAranceles = (idCurso) => {
+    clienteAxios
+      .get(`/arancelesxcurso/${idCurso}`)
+      .then((respuesta) => {
+        console.log("Aranceles", respuesta.data);
+        setDatosAranceles(respuesta.data);
+      })
+      .catch(() => {});
+  };
+  const agregarArancel = () => {
+    const objetoArancel = {
+      IdCurso: cursoActual,
+      FechaDesde: new Date(fechaDesdeAranceles),
+      FechaHasta: new Date(fechaHastaAranceles),
+      Precio: precioAranceles,
+      CantidadUnidadesMinima: parseInt(cantidadUnidadesMinima),
+    };
+    console.log("ESTE ES EL OBJETO PARA MANDAR A LA APII:::", objetoArancel);
+    setDatosAranceles([...datosAranceles, objetoArancel]);
+    clienteAxios(`/nuevoarancel`, {
+      method: "post",
+      // headers: { Authorization: AuthStr },
+      data: objetoArancel,
+    })
+      .then((respuesta) => {
+        setModalAranceles(false);
+        console.log("por el then", respuesta);
+      })
+      .catch(() => {
+        console.log("errorrrrr");
+      });
+  };
 
   return (
     <>
-      <Box mt={3} w="80%" mx="auto" border="solid 1px" p={3}>
+      <Box mt={3} w="80%" mx="auto" p={3}>
         <Tabla
           highlightOnHover
           pointerOnHover
@@ -401,11 +477,6 @@ const Inicio = () => {
               guardar
             </Button>
           </ModalFooter>
-          {/*<Box bg="green.100">
-            <p> *Fechas desde/hasta generan un nuevo registro??</p>
-            <p>* que es cantidad de unidades minimas??</p>
-            <p> * agregar boton de dar de alta arancel??</p>
-            </Box>*/}
         </ModalContent>
       </Modal>
       <Modal
@@ -480,13 +551,106 @@ const Inicio = () => {
         isOpen={modalAranceles}
         onClose={() => {
           setModalAranceles(false);
+          setMostrarCargaArancel(false);
         }}
       >
         <ModalOverlay />
         <ModalContent>
+          <ModalHeader>
+            <Text>Aranceles {cursoActual}</Text>
+          </ModalHeader>
           <ModalBody>
-            <p>aranceles {cursoActual}</p>
+            <Tabla
+              columns={columnasAranceles}
+              data={datosAranceles}
+              customStyles={estiloTablas}
+            />
+            {mostrarCargaArancel && (
+              <HStack mt={4}>
+                <FormControl>
+                  <FormLabel mb={0} fontSize={10}>
+                    Desde
+                  </FormLabel>
+                  <Input
+                    type="date"
+                    size="xs"
+                    name="fechaDesdeAranceles"
+                    value={Moment(fechaDesdeAranceles).format("yyyy-MM-DD")}
+                    onChange={(e) => {
+                      setFechaDesdeAranceles(e.target.value);
+                    }}
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel mb={0} fontSize={10}>
+                    Hasta
+                  </FormLabel>
+                  <Input
+                    type="date"
+                    size="xs"
+                    name="fechaHastaAranceles"
+                    value={fechaHastaAranceles}
+                    onChange={(e) => {
+                      setFechaHastaAranceles(e.target.value);
+                    }}
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel mb={0} fontSize={10}>
+                    Precio
+                  </FormLabel>
+                  <Input
+                    type="number"
+                    size="xs"
+                    name="precioAranceles"
+                    value={precioAranceles}
+                    onChange={(e) => {
+                      setPrecioAranceles(e.target.value);
+                    }}
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel mb={0} fontSize={10}>
+                    C.U.Mín
+                  </FormLabel>
+                  <Input
+                    type="number"
+                    size="xs"
+                    name="cantidadUnidadesMinima"
+                    value={cantidadUnidadesMinima}
+                    onChange={(e) => {
+                      setCantidadUnidadesMinima(e.target.value);
+                    }}
+                  />
+                </FormControl>
+
+                <FormControl mb={0}>
+                  <Icon
+                    as={FaRegSave}
+                    w={6}
+                    h={6}
+                    mt={3}
+                    color="blue.400"
+                    cursor="pointer"
+                    onClick={() => {
+                      agregarArancel();
+                    }}
+                  />
+                </FormControl>
+              </HStack>
+            )}
           </ModalBody>
+          <ModalFooter>
+            <Button
+              size="xs"
+              colorScheme="green"
+              onClick={() => {
+                setMostrarCargaArancel(true);
+              }}
+            >
+              Nuevo Arancel
+            </Button>
+          </ModalFooter>
         </ModalContent>
       </Modal>
     </>
