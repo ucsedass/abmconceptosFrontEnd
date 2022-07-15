@@ -16,6 +16,8 @@ import {
   Text,
   Icon,
   HStack,
+  Center,
+  VStack,
 } from "@chakra-ui/react";
 import Tabla from "react-data-table-component";
 import clienteAxios from "../config/axios";
@@ -26,6 +28,8 @@ import {
   FaInfoCircle,
   FaMoneyCheckAlt,
 } from "react-icons/fa";
+import moment from "moment";
+
 const Inicio = () => {
   //ENEVTOS
   const [modalConceptos, setModalConceptos] = useState(false);
@@ -61,10 +65,13 @@ const Inicio = () => {
   const [cantidadUnidadesMinima, setCantidadUnidadesMinima] = useState(0);
 
   //OTROS
+  const [modalConfirmacion, setModalConfirmacion] = useState(false);
+  const [modalError, setModalError] = useState(false);
   const [error, setError] = useState(false);
   const [eventoActual, setEventoActual] = useState("");
   const [cursoActual, setCursoActual] = useState("");
   const [mostrarCargaArancel, setMostrarCargaArancel] = useState(false);
+  const [descripcionError, setDescripcionError] = useState("");
 
   const columnasConceptos = [
     {
@@ -302,7 +309,7 @@ const Inicio = () => {
       CantidadUnidadesMinima: parseInt(cantidadUnidadesMinima),
     };
     console.log("ESTE ES EL OBJETO PARA MANDAR A LA APII:::", objetoArancel);
-    setDatosAranceles([...datosAranceles, objetoArancel]);
+    // setDatosAranceles([...datosAranceles, objetoArancel]);
     clienteAxios(`/nuevoarancel`, {
       method: "post",
       // headers: { Authorization: AuthStr },
@@ -310,11 +317,22 @@ const Inicio = () => {
     })
       .then((respuesta) => {
         setModalAranceles(false);
-        console.log("por el then", respuesta);
+        setModalConfirmacion(true);
+        limpiarAranceles();
+        console.log("SE REALIZO EL ALTA", respuesta);
       })
-      .catch(() => {
-        console.log("errorrrrr");
+      .catch((error) => {
+        setModalError(true);
+        setDescripcionError(error.response.data.message);
+        console.log(error.response.data.message);
       });
+  };
+
+  const limpiarAranceles = () => {
+    setFechaDesdeAranceles("");
+    setFechaHastaAranceles("");
+    setPrecioAranceles("");
+    setCantidadUnidadesMinima("");
   };
 
   return (
@@ -553,6 +571,7 @@ const Inicio = () => {
           setModalAranceles(false);
           setMostrarCargaArancel(false);
         }}
+        size="xl"
       >
         <ModalOverlay />
         <ModalContent>
@@ -572,10 +591,10 @@ const Inicio = () => {
                     Desde
                   </FormLabel>
                   <Input
-                    type="date"
+                    type="datetime-local"
                     size="xs"
                     name="fechaDesdeAranceles"
-                    value={Moment(fechaDesdeAranceles).format("yyyy-MM-DD")}
+                    value={fechaDesdeAranceles}
                     onChange={(e) => {
                       setFechaDesdeAranceles(e.target.value);
                     }}
@@ -586,7 +605,7 @@ const Inicio = () => {
                     Hasta
                   </FormLabel>
                   <Input
-                    type="date"
+                    type="datetime-local"
                     size="xs"
                     name="fechaHastaAranceles"
                     value={fechaHastaAranceles}
@@ -649,6 +668,59 @@ const Inicio = () => {
               }}
             >
               Nuevo Arancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <Modal
+        isOpen={modalConfirmacion}
+        onClose={() => {
+          setModalConfirmacion(false);
+        }}
+      >
+        <ModalOverlay />
+        <ModalContent bg="white">
+          <ModalBody>
+            <Center>
+              <VStack>
+                <Icon w={20} h={20} color="green" as={FaRegCheckCircle} />
+                <Text>Arancel guardado correctamente.</Text>
+              </VStack>
+            </Center>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              w="100%"
+              colorScheme="green"
+              onClick={() => {
+                setModalConfirmacion(false);
+              }}
+            >
+              Aceptar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={modalError}
+        onClose={() => {
+          setModalError(false);
+        }}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalBody bg="red.200">
+            <p>Error</p>
+            {descripcionError}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              onClick={() => {
+                setModalError(false);
+              }}
+            >
+              Aceptar
             </Button>
           </ModalFooter>
         </ModalContent>
