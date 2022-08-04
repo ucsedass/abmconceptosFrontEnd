@@ -43,7 +43,7 @@ const Inicio = () => {
   const [reqEmailEvento, setReqEmailEvento] = useState(true);
   const [idEvento, setIdEvento] = useState(0);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(0);
-
+  const [codigoBuscar, setCodigoBuscar] = useState("");
   //CURSOS
   const [nombreCurso, setNombreCurso] = useState("");
   const [nombreSecCurso, setNombreSecCurso] = useState("");
@@ -79,6 +79,7 @@ const Inicio = () => {
   const [modalConfirmacion, setModalConfirmacion] = useState(false);
   const [modalError, setModalError] = useState(false);
   const [error, setError] = useState(false);
+  const [errorFechas, setErrorFechas] = useState(false);
   const [eventoActual, setEventoActual] = useState("");
   const [cursoActual, setCursoActual] = useState("");
   const [mostrarCargaArancel, setMostrarCargaArancel] = useState(false);
@@ -159,7 +160,6 @@ const Inicio = () => {
           onClick={() => {
             traerAranceles(row.idCurso);
             setModalAranceles(true);
-
             setCursoActual(row.idCurso);
           }}
         />
@@ -232,23 +232,49 @@ const Inicio = () => {
       setModalConceptos(false);
       setError(false);
       const objetoConceptos = {
-        codigoEvento: codigoEvento,
-        nombre: nombreConcepto,
+        codigo: codigoEvento,
+        Nombre: nombreConcepto,
         descripcion: descripcionConcepto,
         habilitadoEvento: habilitadoEvento,
-        reqEmailEvento: reqEmailEvento,
+        RequiereValidacionEmail: reqEmailEvento,
       };
-      setDatosConceptos([...datosConceptos, objetoConceptos]);
+      // setDatosConceptos([...datosConceptos, objetoConceptos]);
+
+      clienteAxios(`/nuevoevento`, { method: "post", data: objetoConceptos })
+        .then((respuesta) => {
+          traerEventos();
+          setModalConfirmacion(true);
+          console.log("Esta es la repsuesta:", respuesta);
+        })
+        .catch((error) => {
+          console.log("Este es el error:", error);
+        });
     }
   };
 
-  const agregarCurso = () => {
+  const validarFechaCurso = () => {
     if (
       [codigo, nombreCurso, nombreSecCurso, cupoMaximo, emailResp].includes("")
     ) {
       setError(true);
-      console.log("Hay un error");
+      return false;
     } else {
+      setError(false);
+      return true;
+    }
+  };
+
+  const validarVacioCurso = () => {
+    if (fechaInicioCurso > fechaFinCurso) {
+      setErrorFechas(true);
+      return false;
+    } else {
+      setErrorFechas(false);
+      return true;
+    }
+  };
+  const agregarCurso = () => {
+    if (validarFechaCurso() && validarVacioCurso) {
       console.log("No hay error");
       setModalCursos(false);
       setError(false);
@@ -257,8 +283,8 @@ const Inicio = () => {
         nombre2: nombreSecCurso,
         codigo: codigo,
         idGrupoCurso: idGrupoCurso,
-        fechaInicio: fechaInicioCurso,
-        fechaFin: fechaFinCurso,
+        fechaInicio: new Date(fechaInicioCurso),
+        fechaFin: new Date(fechaFinCurso),
         cupoMaximo: cupoMaximo,
         habilitado: habilitadoCurso,
         resaltar: resaltar,
@@ -274,8 +300,12 @@ const Inicio = () => {
       };
       //setDatosCursos([...datosCursos, objetoCursos]);
 
-      clienteAxios(`/nuevocurso2`, { method: "post", data: { objetoCursos } })
+      console.log("ESTE ES EL CURSO A MANDAR:::::::::::", objetoCursos);
+
+      clienteAxios(`/nuevocurso`, { method: "post", data: objetoCursos })
         .then((respuesta) => {
+          traerCursos(eventoSeleccionado);
+          setModalConfirmacion(true);
           console.log("Esta es la repsuesta:", respuesta);
         })
         .catch((error) => {
@@ -286,6 +316,8 @@ const Inicio = () => {
 
   const clickear = (row) => {
     traerCursos(row.idGrupo);
+    traerAranceles(0);
+    traerInformacion(0);
     setEventoSeleccionado(row.idGrupo);
     setIdGrupoCurso(row.idGrupo);
     console.log("ESTE ES EL ID GRUPO:", row.idGrupo);
@@ -295,6 +327,17 @@ const Inicio = () => {
     traerInformacion(row.idCurso);
     traerAranceles(row.idCurso);
     console.log("id del curso:::", row.idCurso);
+  };
+
+  const traerEventos = () => {
+    clienteAxios
+      .get("/grupocurso")
+      .then((respuesta) => {
+        console.log(respuesta.data);
+        setDatosConceptos(respuesta.data);
+        console.log(respuesta.data);
+      })
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -345,6 +388,7 @@ const Inicio = () => {
         setModalAranceles(false);
         setModalConfirmacion(true);
         limpiarAranceles();
+        traerAranceles(cursoActual);
         console.log("SE REALIZO EL ALTA", respuesta);
       })
       .catch((error) => {
@@ -373,50 +417,87 @@ const Inicio = () => {
       .catch(() => {});
   };
 
-  let cadena = "12/12/2012";
+  const buscarEvento = () => {
+    console.log("ENTRO A BUSCAR EVENTO");
+    clienteAxios
+      .get(`/buscarevento/${codigoBuscar}`)
+      .then((respuesta) => {
+        console.log("eventos", respuesta.data);
+        setDatosConceptos(respuesta.data);
+        traerAranceles(0);
+        traerCursos(0);
+        traerInformacion(0);
+      })
+      .catch(() => {});
+  };
   return (
     <>
       <Box mt={3} w="80%" mx="auto" p={3}>
-        <Tabla
-          highlightOnHover
-          pointerOnHover
-          mt={2}
-          title="Grupo de conceptos / Evento"
-          columns={columnasConceptos}
-          data={datosConceptos}
-          onRowClicked={clickear}
-          customStyles={estiloTablas}
-        />
+        <Box border="solid 1px #F5F4F3" p={4} mb={2}>
+          <Center mb={4}>
+            <strong>EVENTOS</strong>
+          </Center>
+          <SimpleGrid columns={2} w="300px">
+            <Input
+              size="xs"
+              placeholder="Codigo"
+              name="codigoBuscar"
+              value={codigoBuscar}
+              onChange={(e) => {
+                setCodigoBuscar(e.target.value.toUpperCase());
+              }}
+            />
+            <Button
+              ml={2}
+              size="xs"
+              colorScheme="orange"
+              onClick={buscarEvento}
+            >
+              Buscar evento
+            </Button>
+          </SimpleGrid>
 
-        <Box mt={5}>
+          <Tabla
+            highlightOnHover
+            pointerOnHover
+            mt={2}
+            columns={columnasConceptos}
+            data={datosConceptos}
+            onRowClicked={clickear}
+            customStyles={estiloTablas}
+            noDataComponent="No hay eventos"
+          />
+
           <Button
-            mr="4"
+            mt={5}
             onClick={() => {
               setModalConceptos(true);
             }}
             colorScheme="green"
-            size="sm"
+            size="xs"
           >
             Agregar evento
           </Button>
         </Box>
-
         <SimpleGrid columns={2} spacing={2}>
-          <Box height="auto">
+          <Box height="auto" p={4} border="solid 1px #F5F4F3">
+            <Center mb={4}>
+              <strong>CURSOS</strong>
+            </Center>
             <Tabla
               highlightOnHover
               pointerOnHover
-              title="Cursos"
               columns={columnasCursos}
               data={datosCursos}
               customStyles={estiloTablas}
               onRowClicked={clikearCursos}
+              noDataComponent="No hay cursos"
             />
 
             <Box mt={5}>
               <Button
                 colorScheme="orange"
-                size="sm"
+                size="xs"
                 onClick={() => {
                   console.log("ESTE ES EL EVENTO : ", eventoActual);
                   setModalCursos(true);
@@ -426,40 +507,63 @@ const Inicio = () => {
               </Button>
             </Box>
           </Box>
-          <Box>
+          <Box p={4} border="solid 1px #F5F4F3">
             <Center mb={4}>
-              {" "}
               <strong>INFORMACION</strong>
             </Center>
-            <SimpleGrid columns={2}>
+            {infoCurso[0] !== undefined ? (
               <Box>
-                <FormControl>
-                  <FormLabel fontSize={12}>
-                    <strong> Fecha Inicio :</strong> {cadena}
-                    {/*moment(infoCurso[0].fechaInicio).format("DD-MM-YYYY")*/}
-                  </FormLabel>
-                </FormControl>
-                <FormControl>
-                  <FormLabel fontSize={12}>
-                    <strong>Fecha Fin :</strong> {cadena}
-                    {/*moment(infoCurso[0].fechaFin).format("DD-MM-YYYY")*/}
-                  </FormLabel>
-                </FormControl>
+                <SimpleGrid columns={2}>
+                  <Box>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> Fecha Inicio : </strong>
+                        {moment(infoCurso[0].fechaInicio).format("DD-MM-YYYY")}
+                      </FormLabel>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong>Fecha Fin : </strong>
+                        {moment(infoCurso[0].fechaFin).format("DD-MM-YYYY")}
+                      </FormLabel>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> Cupo Maximo : </strong>
+                        {infoCurso[0].cupoMaximo}
+                      </FormLabel>
+                    </FormControl>
+                  </Box>
+
+                  <Box>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> E-mail : </strong>
+                        {infoCurso[0].mailReferencia}
+                      </FormLabel>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> Domicilio : </strong>
+                        {infoCurso[0].domicilioReferencia}
+                      </FormLabel>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> Contacto : </strong>
+                        {infoCurso[0].NombreContactoReferencia}
+                      </FormLabel>
+                    </FormControl>
+                  </Box>
+                </SimpleGrid>
               </Box>
-              <Box>
-                <FormControl>
-                  <FormLabel fontSize={12}>
-                    <strong> Cupo Maximo :</strong>
-                    {cadena} {/*infoCurso[0].cupoMaximo*/}
-                  </FormLabel>
-                </FormControl>
-              </Box>
-            </SimpleGrid>
+            ) : null}
             {console.log("este es info curso", infoCurso)}{" "}
             <Tabla
               columns={columnasAranceles}
               data={datosAranceles}
               customStyles={estiloTablas}
+              noDataComponent="No hay aranceles"
             />
           </Box>
         </SimpleGrid>
@@ -470,29 +574,42 @@ const Inicio = () => {
         onClose={() => {
           setModalCursos(false);
         }}
+        size="xl"
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
+          <ModalHeader fontSize={14}>
             Nuevo curso para el evento : {eventoSeleccionado}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <FormControl>
-              <FormLabel>Código</FormLabel>
+            {error && (
+              <Box bg="red.500">
+                <Center color="white">TODOS LOS CAMPOS SON OBLIGATORIOS</Center>
+              </Box>
+            )}
+            {errorFechas && (
+              <Box bg="red.500">
+                <Center color="white">FECHAS INVALIDAS</Center>
+              </Box>
+            )}
+
+            <FormControl mb={2}>
+              <FormLabel fontSize={12}>Código</FormLabel>
               <Input
-                size="sm"
+                maxLength={10}
+                size="xs"
                 name="codigo"
                 value={codigo}
                 onChange={(e) => {
-                  setCodigo(e.target.value);
+                  setCodigo(e.target.value.toUpperCase());
                 }}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>Nombre Principal</FormLabel>
+            <FormControl mb={2}>
+              <FormLabel fontSize={12}>Nombre Principal</FormLabel>
               <Input
-                size="sm"
+                size="xs"
                 name="nombreCurso"
                 value={nombreCurso}
                 onChange={(e) => {
@@ -500,10 +617,10 @@ const Inicio = () => {
                 }}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>Nombre Secundario</FormLabel>
+            <FormControl mb={2}>
+              <FormLabel fontSize={12}>Nombre Secundario</FormLabel>
               <Input
-                size="sm"
+                size="xs"
                 name="nombreSecCurso"
                 value={nombreSecCurso}
                 onChange={(e) => {
@@ -511,10 +628,34 @@ const Inicio = () => {
                 }}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>Cupo Máximo</FormLabel>
+            <FormControl mb={2}>
+              <FormLabel fontSize={12}>Fecha de Inicio</FormLabel>
               <Input
-                size="sm"
+                size="xs"
+                name="fechaInicioCurso"
+                value={fechaInicioCurso}
+                type="datetime-local"
+                onChange={(e) => {
+                  setFechaInicioCurso(e.target.value);
+                }}
+              />
+            </FormControl>
+            <FormControl mb={2}>
+              <FormLabel fontSize={12}>Fecha de Fin</FormLabel>
+              <Input
+                size="xs"
+                name="fechaFinCurso"
+                value={fechaFinCurso}
+                type="datetime-local"
+                onChange={(e) => {
+                  setFechaFinCurso(e.target.value);
+                }}
+              />
+            </FormControl>
+            <FormControl mb={2}>
+              <FormLabel fontSize={12}>Cupo Máximo</FormLabel>
+              <Input
+                size="xs"
                 name="cupoMaximo"
                 value={cupoMaximo}
                 onChange={(e) => {
@@ -522,10 +663,10 @@ const Inicio = () => {
                 }}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>E-mail responsable</FormLabel>
+            <FormControl mb={2}>
+              <FormLabel fontSize={12}>E-mail responsable</FormLabel>
               <Input
-                size="sm"
+                size="xs"
                 name="emailResp"
                 value={emailResp}
                 onChange={(e) => {
@@ -533,33 +674,31 @@ const Inicio = () => {
                 }}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>Fecha de Inicio</FormLabel>
+
+            <FormControl mb={2}>
+              <FormLabel fontSize={12}>Domicilio responsable</FormLabel>
               <Input
-                size="sm"
-                name="fechaInicioCurso"
-                value={fechaInicioCurso}
-                type="date"
+                size="xs"
+                value={domicilioRefCurso}
                 onChange={(e) => {
-                  setFechaInicioCurso(e.target.value);
+                  setDomicilioRefCurso(e.target.value);
                 }}
               />
             </FormControl>
             <FormControl>
-              <FormLabel>Fecha de Fin</FormLabel>
+              <FormLabel fontSize={12}>Nombre contacto</FormLabel>
               <Input
-                size="sm"
-                name="fechaFinCurso"
-                value={fechaFinCurso}
-                type="date"
+                size="xs"
+                value={nombreContactoCurso}
                 onChange={(e) => {
-                  setFechaFinCurso(e.target.value);
+                  setNombreContactoCurso(e.target.value);
                 }}
               />
             </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button
+              size="xs"
               colorScheme="blue"
               mr={3}
               onClick={() => {
@@ -569,6 +708,7 @@ const Inicio = () => {
               Cerrar
             </Button>
             <Button
+              size="xs"
               colorScheme="green"
               onClick={() => {
                 agregarCurso();
@@ -583,29 +723,35 @@ const Inicio = () => {
         isOpen={modalConceptos}
         onClose={() => {
           setModalConceptos(false);
+          setError(false);
         }}
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Grupo conceptos / Evento</ModalHeader>
+          <ModalHeader fontSize={14}>Grupo conceptos / Evento</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {error && <Box bg="red.300">TODOS LOS CAMPOS SON OBLIGATORIOS</Box>}
+            {error && (
+              <Box bg="red.500">
+                <Center color="white">TODOS LOS CAMPOS SON OBLIGATORIOS</Center>
+              </Box>
+            )}
             <FormControl mb={2}>
-              <FormLabel> Codigo</FormLabel>
+              <FormLabel fontSize={12}> Codigo</FormLabel>
               <Input
-                size="sm"
+                maxLength={20}
+                size="xs"
                 name="codigoEvento"
                 value={codigoEvento}
                 onChange={(e) => {
-                  setCodigoEvento(e.target.value);
+                  setCodigoEvento(e.target.value.toUpperCase());
                 }}
               />
             </FormControl>
-            <FormControl>
-              <FormLabel>Nombre</FormLabel>
+            <FormControl mb={2}>
+              <FormLabel fontSize={12}>Nombre</FormLabel>
               <Input
-                size="sm"
+                size="xs"
                 name="nombreConcepto"
                 value={nombreConcepto}
                 onChange={(e) => {
@@ -614,9 +760,9 @@ const Inicio = () => {
               />
             </FormControl>
             <FormControl>
-              <FormLabel>Descripcion</FormLabel>
+              <FormLabel fontSize={12}>Descripcion</FormLabel>
               <Input
-                size="sm"
+                size="xs"
                 id="descripcionConcepto"
                 value={descripcionConcepto}
                 onChange={(e) => {
@@ -627,6 +773,7 @@ const Inicio = () => {
           </ModalBody>
           <ModalFooter>
             <Button
+              size="xs"
               colorScheme="blue"
               mr={3}
               onClick={() => {
@@ -636,12 +783,13 @@ const Inicio = () => {
               Cerrar
             </Button>
             <Button
+              size="xs"
               colorScheme="green"
               onClick={() => {
                 agregarConcepto();
               }}
             >
-              guardar
+              Guardar
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -766,7 +914,7 @@ const Inicio = () => {
             <Center>
               <VStack>
                 <Icon w={20} h={20} color="green" as={FaRegCheckCircle} />
-                <Text>Arancel guardado correctamente.</Text>
+                <Text>Datos guardados.</Text>
               </VStack>
             </Center>
           </ModalBody>
