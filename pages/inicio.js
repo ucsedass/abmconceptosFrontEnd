@@ -18,6 +18,7 @@ import {
   HStack,
   Center,
   VStack,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import Tabla from "react-data-table-component";
 import clienteAxios from "../config/axios";
@@ -41,20 +42,30 @@ const Inicio = () => {
   const [habilitadoEvento, setHabilitadoEvento] = useState(true);
   const [reqEmailEvento, setReqEmailEvento] = useState(true);
   const [idEvento, setIdEvento] = useState(0);
+  const [eventoSeleccionado, setEventoSeleccionado] = useState(0);
+
   //CURSOS
-  const [datosCursos, setDatosCursos] = useState([]);
-  const [codigo, setCodigo] = useState("");
   const [nombreCurso, setNombreCurso] = useState("");
   const [nombreSecCurso, setNombreSecCurso] = useState("");
-  const [cupoMaximo, setCupoMaximo] = useState(0);
-  const [emailResp, setEmailResp] = useState("");
+  const [codigo, setCodigo] = useState("");
+  const [idGrupoCurso, setIdGrupoCurso] = useState("");
   const [fechaInicioCurso, setFechaInicioCurso] = useState("");
   const [fechaFinCurso, setFechaFinCurso] = useState("");
+  const [cupoMaximo, setCupoMaximo] = useState(0);
   const [habilitadoCurso, setHabilitadoCurso] = useState(true);
+  const [resaltar, setResaltar] = useState(false);
+  const [codUnidadAcademica, setCodUnidadAcademica] = useState(null);
+  const [idPrograma, setIdPrograma] = useState(null);
+  const [idPlanEstudio] = useState(null);
+  const [idObligacion, setIdObligacion] = useState(null);
+  const [emailResp, setEmailResp] = useState("");
   const [domicilioRefCurso, setDomicilioRefCurso] = useState("");
   const [nombreContactoCurso, setNombreContactoCurso] = useState("");
   const [urlUbicacionCurso, setUrlUbicacionCurso] = useState("");
   const [reqEmailCurso, setReqEmailCurso] = useState(true);
+  const [datosCursos, setDatosCursos] = useState([]);
+
+  const [infoCurso, setInfoCurso] = useState([]);
 
   //ARANCELES
   const [modalAranceles, setModalAranceles] = useState(false);
@@ -96,12 +107,12 @@ const Inicio = () => {
     {
       name: "Código",
       selector: (row) => row.codigo,
-      width: "150px",
+      width: "110px",
     },
     {
       name: "Nombre Curso ",
       selector: (row) => row.nombre1,
-      width: "400px",
+      width: "300px",
       wrap: true,
     },
     {
@@ -110,7 +121,7 @@ const Inicio = () => {
       width: "250px",
       wrap: true,
     },
-    {
+    /*{
       name: "Cupo Maximo",
       selector: (row) => row.cupoMaximo,
       width: "100px",
@@ -135,7 +146,7 @@ const Inicio = () => {
         <div>{Moment(row.fechaFin).format("DD-MM-YYYY ")}</div>
       ),
       width: "100px",
-    },
+    },*/
     {
       name: "",
       cell: (row) => (
@@ -152,14 +163,6 @@ const Inicio = () => {
             setCursoActual(row.idCurso);
           }}
         />
-      ),
-      width: "50px",
-      center: "true",
-    },
-    {
-      name: "",
-      cell: () => (
-        <Icon as={FaInfoCircle} color="blue.200" w={6} h={6} cursor="pointer" />
       ),
       width: "50px",
       center: "true",
@@ -250,25 +253,48 @@ const Inicio = () => {
       setModalCursos(false);
       setError(false);
       const objetoCursos = {
+        nombre1: nombreCurso,
+        nombre2: nombreSecCurso,
         codigo: codigo,
-        nombreCurso: nombreCurso,
-        nombreSecCurso: nombreSecCurso,
+        idGrupoCurso: idGrupoCurso,
+        fechaInicio: fechaInicioCurso,
+        fechaFin: fechaFinCurso,
         cupoMaximo: cupoMaximo,
-        emailResp: emailResp,
-        fechaInicioCurso: fechaInicioCurso,
-        fechaFinCurso: fechaFinCurso,
-        habilitadoCurso: habilitadoCurso,
-        domicilioRefCurso: domicilioRefCurso,
-        nombreContactoCurso: nombreContactoCurso,
-        urlUbicacionCurso: urlUbicacionCurso,
-        reqEmailCurso: reqEmailCurso,
+        habilitado: habilitadoCurso,
+        resaltar: resaltar,
+        codUnidadAcademica: codUnidadAcademica,
+        idPrograma: idPrograma,
+        idPlanEstudio: idPlanEstudio,
+        idObligacion: idObligacion,
+        mailReferencia: emailResp,
+        domicilioReferencia: domicilioRefCurso,
+        NombreContactoReferencia: nombreContactoCurso,
+        urlUbicacion: urlUbicacionCurso,
+        RequiereValidacionEmail: reqEmailCurso,
       };
-      setDatosCursos([...datosCursos, objetoCursos]);
+      //setDatosCursos([...datosCursos, objetoCursos]);
+
+      clienteAxios(`/nuevocurso2`, { method: "post", data: { objetoCursos } })
+        .then((respuesta) => {
+          console.log("Esta es la repsuesta:", respuesta);
+        })
+        .catch((error) => {
+          console.log("Este es el error:", error);
+        });
     }
   };
 
   const clickear = (row) => {
     traerCursos(row.idGrupo);
+    setEventoSeleccionado(row.idGrupo);
+    setIdGrupoCurso(row.idGrupo);
+    console.log("ESTE ES EL ID GRUPO:", row.idGrupo);
+  };
+
+  const clikearCursos = (row) => {
+    traerInformacion(row.idCurso);
+    traerAranceles(row.idCurso);
+    console.log("id del curso:::", row.idCurso);
   };
 
   useEffect(() => {
@@ -308,7 +334,7 @@ const Inicio = () => {
       Precio: precioAranceles,
       CantidadUnidadesMinima: parseInt(cantidadUnidadesMinima),
     };
-    console.log("ESTE ES EL OBJETO PARA MANDAR A LA APII:::", objetoArancel);
+
     // setDatosAranceles([...datosAranceles, objetoArancel]);
     clienteAxios(`/nuevoarancel`, {
       method: "post",
@@ -333,6 +359,18 @@ const Inicio = () => {
     setFechaHastaAranceles("");
     setPrecioAranceles("");
     setCantidadUnidadesMinima("");
+  };
+
+  const traerInformacion = (idCurso) => {
+    console.log("ENTRO A TRAER LA INFORMACION");
+
+    clienteAxios
+      .get(`/cursoxid/${idCurso}`)
+      .then((respuesta) => {
+        console.log("Informacion", respuesta.data);
+        setInfoCurso(respuesta.data);
+      })
+      .catch(() => {});
   };
 
   return (
@@ -362,27 +400,60 @@ const Inicio = () => {
           </Button>
         </Box>
 
-        <Tabla
-          highlightOnHover
-          pointerOnHover
-          title="Cursos"
-          columns={columnasCursos}
-          data={datosCursos}
-          customStyles={estiloTablas}
-        />
+        <SimpleGrid columns={2} spacing={2}>
+          <Box height="auto">
+            <Tabla
+              highlightOnHover
+              pointerOnHover
+              title="Cursos"
+              columns={columnasCursos}
+              data={datosCursos}
+              customStyles={estiloTablas}
+              onRowClicked={clikearCursos}
+            />
 
-        <Box mt={5}>
-          <Button
-            colorScheme="orange"
-            size="sm"
-            onClick={() => {
-              console.log("ESTE ES EL EVENTO : ", eventoActual);
-              setModalCursos(true);
-            }}
-          >
-            Agregar curso
-          </Button>
-        </Box>
+            <Box mt={5}>
+              <Button
+                colorScheme="orange"
+                size="sm"
+                onClick={() => {
+                  console.log("ESTE ES EL EVENTO : ", eventoActual);
+                  setModalCursos(true);
+                }}
+              >
+                Agregar curso
+              </Button>
+            </Box>
+          </Box>
+          <Box>
+            <Center>INFORMACION</Center>
+            <SimpleGrid columns={2}>
+              <Box>
+                <FormControl>
+                  <FormLabel>Fecha Inicio :</FormLabel>
+                  {moment(infoCurso[0].fechaInicio).format("DD-MM-YYYY")}
+                </FormControl>
+                <FormControl>
+                  <FormLabel>
+                    Fecha Fin :{" "}
+                    {moment(infoCurso[0].fechaFin).format("DD-MM-YYYY")}
+                  </FormLabel>
+                </FormControl>
+              </Box>
+              <Box>
+                <FormControl>
+                  <FormLabel>Cupo Maximo : {infoCurso[0].cupoMaximo}</FormLabel>
+                </FormControl>
+              </Box>
+            </SimpleGrid>
+            {console.log("este es info curso", infoCurso)}{" "}
+            <Tabla
+              columns={columnasAranceles}
+              data={datosAranceles}
+              customStyles={estiloTablas}
+            />
+          </Box>
+        </SimpleGrid>
       </Box>
 
       <Modal
@@ -393,7 +464,9 @@ const Inicio = () => {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Nuevo Curso {eventoActual}</ModalHeader>
+          <ModalHeader>
+            Nuevo curso para el evento : {eventoSeleccionado}
+          </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
