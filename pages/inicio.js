@@ -373,6 +373,7 @@ const Inicio = () => {
       .catch(() => {});
   };
 
+  let cadena = "12/12/2012";
   return (
     <>
       <Box mt={3} w="80%" mx="auto" p={3}>
@@ -426,23 +427,31 @@ const Inicio = () => {
             </Box>
           </Box>
           <Box>
-            <Center>INFORMACION</Center>
+            <Center mb={4}>
+              {" "}
+              <strong>INFORMACION</strong>
+            </Center>
             <SimpleGrid columns={2}>
               <Box>
                 <FormControl>
-                  <FormLabel>Fecha Inicio :</FormLabel>
-                  {moment(infoCurso[0].fechaInicio).format("DD-MM-YYYY")}
+                  <FormLabel fontSize={12}>
+                    <strong> Fecha Inicio :</strong> {cadena}
+                    {/*moment(infoCurso[0].fechaInicio).format("DD-MM-YYYY")*/}
+                  </FormLabel>
                 </FormControl>
                 <FormControl>
-                  <FormLabel>
-                    Fecha Fin :{" "}
-                    {moment(infoCurso[0].fechaFin).format("DD-MM-YYYY")}
+                  <FormLabel fontSize={12}>
+                    <strong>Fecha Fin :</strong> {cadena}
+                    {/*moment(infoCurso[0].fechaFin).format("DD-MM-YYYY")*/}
                   </FormLabel>
                 </FormControl>
               </Box>
               <Box>
                 <FormControl>
-                  <FormLabel>Cupo Maximo : {infoCurso[0].cupoMaximo}</FormLabel>
+                  <FormLabel fontSize={12}>
+                    <strong> Cupo Maximo :</strong>
+                    {cadena} {/*infoCurso[0].cupoMaximo*/}
+                  </FormLabel>
                 </FormControl>
               </Box>
             </SimpleGrid>
