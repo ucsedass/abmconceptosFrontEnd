@@ -19,6 +19,7 @@ import {
   Center,
   VStack,
   SimpleGrid,
+  Tooltip,
 } from "@chakra-ui/react";
 import Tabla from "react-data-table-component";
 import clienteAxios from "../config/axios";
@@ -27,7 +28,12 @@ import {
   FaRegSave,
   FaRegCheckCircle,
   FaInfoCircle,
+  FaTrashAlt,
   FaMoneyCheckAlt,
+  FaSearchengin,
+  FaSearch,
+  FaPlus,
+  FaRegTimesCircle,
 } from "react-icons/fa";
 import moment from "moment";
 
@@ -84,6 +90,7 @@ const Inicio = () => {
   const [cursoActual, setCursoActual] = useState("");
   const [mostrarCargaArancel, setMostrarCargaArancel] = useState(false);
   const [descripcionError, setDescripcionError] = useState("");
+  const [errorArancel, setErrorArancel] = useState(false);
 
   const columnasConceptos = [
     {
@@ -196,6 +203,24 @@ const Inicio = () => {
       name: "Cant. U MIn",
       selector: (row) => row.CantidadUnidadesMinima,
       center: "true",
+      width: "100px",
+    },
+    {
+      name: "",
+      cell: (row) => (
+        <Icon
+          as={FaTrashAlt}
+          color="red.400"
+          w={5}
+          h={5}
+          cursor="pointer"
+          onClick={() => {
+            bajaArancel();
+          }}
+        />
+      ),
+      width: "50px",
+      center: "true",
     },
   ];
   const estiloTablas = {
@@ -252,7 +277,7 @@ const Inicio = () => {
     }
   };
 
-  const validarFechaCurso = () => {
+  const validarVacioCurso = () => {
     if (
       [codigo, nombreCurso, nombreSecCurso, cupoMaximo, emailResp].includes("")
     ) {
@@ -264,8 +289,14 @@ const Inicio = () => {
     }
   };
 
-  const validarVacioCurso = () => {
-    if (fechaInicioCurso > fechaFinCurso) {
+  const validarFechaCurso = () => {
+    if (
+      fechaInicioCurso > fechaFinCurso ||
+      fechaInicioCurso === "" ||
+      fechaFinCurso === "" ||
+      moment(fechaInicioCurso).format("YYYY-MM-DD") <
+        moment(Date.now()).format("YYYY-MM-DD")
+    ) {
       setErrorFechas(true);
       return false;
     } else {
@@ -274,7 +305,11 @@ const Inicio = () => {
     }
   };
   const agregarCurso = () => {
-    if (validarFechaCurso() && validarVacioCurso) {
+    console.log(
+      moment(fechaInicioCurso).format("YYYY-MM-DD"),
+      moment(Date.now()).format("YYYY-MM-DD")
+    );
+    if (validarFechaCurso() && validarVacioCurso()) {
       console.log("No hay error");
       setModalCursos(false);
       setError(false);
@@ -369,33 +404,57 @@ const Inicio = () => {
       })
       .catch(() => {});
   };
-  const agregarArancel = () => {
-    const objetoArancel = {
-      IdCurso: cursoActual,
-      FechaDesde: new Date(fechaDesdeAranceles),
-      FechaHasta: new Date(fechaHastaAranceles),
-      Precio: precioAranceles,
-      CantidadUnidadesMinima: parseInt(cantidadUnidadesMinima),
-    };
 
-    // setDatosAranceles([...datosAranceles, objetoArancel]);
-    clienteAxios(`/nuevoarancel`, {
-      method: "post",
-      // headers: { Authorization: AuthStr },
-      data: objetoArancel,
-    })
-      .then((respuesta) => {
-        setModalAranceles(false);
-        setModalConfirmacion(true);
-        limpiarAranceles();
-        traerAranceles(cursoActual);
-        console.log("SE REALIZO EL ALTA", respuesta);
+  const validarFechaArancel = () => {
+    if (
+      moment(fechaDesdeAranceles).format("YYYY-MM-DD") >
+        moment(fechaHastaAranceles).format("YYYY-MM-DD") ||
+      fechaDesdeAranceles === "" ||
+      fechaHastaAranceles === ""
+    ) {
+      setErrorArancel(true);
+      return false;
+    } else {
+      setErrorArancel(false);
+      return true;
+    }
+  };
+
+  const agregarArancel = () => {
+    console.log(
+      "ESTADO DE VLAIDAR ARANCEL:::",
+      validarFechaArancel(),
+      fechaDesdeAranceles,
+      fechaHastaAranceles
+    );
+    if (validarFechaArancel()) {
+      const objetoArancel = {
+        IdCurso: cursoActual,
+        FechaDesde: new Date(fechaDesdeAranceles),
+        FechaHasta: new Date(fechaHastaAranceles),
+        Precio: precioAranceles,
+        CantidadUnidadesMinima: parseInt(cantidadUnidadesMinima),
+      };
+
+      // setDatosAranceles([...datosAranceles, objetoArancel]);
+      clienteAxios(`/nuevoarancel`, {
+        method: "post",
+        // headers: { Authorization: AuthStr },
+        data: objetoArancel,
       })
-      .catch((error) => {
-        setModalError(true);
-        setDescripcionError(error.response.data.message);
-        console.log(error.response.data.message);
-      });
+        .then((respuesta) => {
+          setModalAranceles(false);
+          setModalConfirmacion(true);
+          limpiarAranceles();
+          traerAranceles(cursoActual);
+          console.log("SE REALIZO EL ALTA", respuesta);
+        })
+        .catch((error) => {
+          setModalError(true);
+          setDescripcionError(error.response.data.message);
+          console.log(error.response.data.message);
+        });
+    }
   };
 
   const limpiarAranceles = () => {
@@ -403,6 +462,9 @@ const Inicio = () => {
     setFechaHastaAranceles("");
     setPrecioAranceles("");
     setCantidadUnidadesMinima("");
+  };
+  const bajaArancel = () => {
+    console.log("COMENZAMOS LA BAJA DE ARANCEL");
   };
 
   const traerInformacion = (idCurso) => {
@@ -430,6 +492,7 @@ const Inicio = () => {
       })
       .catch(() => {});
   };
+
   return (
     <>
       <Box mt={3} w="80%" mx="auto" p={3}>
@@ -448,6 +511,7 @@ const Inicio = () => {
               }}
             />
             <Button
+              rightIcon={<FaSearch />}
               ml={2}
               size="xs"
               colorScheme="orange"
@@ -469,6 +533,7 @@ const Inicio = () => {
           />
 
           <Button
+            rightIcon={<FaPlus />}
             mt={5}
             onClick={() => {
               setModalConceptos(true);
@@ -496,6 +561,7 @@ const Inicio = () => {
 
             <Box mt={5}>
               <Button
+                rightIcon={<FaPlus />}
                 colorScheme="orange"
                 size="xs"
                 onClick={() => {
@@ -573,6 +639,8 @@ const Inicio = () => {
         isOpen={modalCursos}
         onClose={() => {
           setModalCursos(false);
+          setError(false);
+          setErrorFechas(false);
         }}
         size="xl"
       >
@@ -698,16 +766,20 @@ const Inicio = () => {
           </ModalBody>
           <ModalFooter>
             <Button
+              rightIcon={<FaRegTimesCircle />}
               size="xs"
               colorScheme="blue"
               mr={3}
               onClick={() => {
                 setModalCursos(!modalCursos);
+                setError(false);
+                setErrorFechas(false);
               }}
             >
               Cerrar
             </Button>
             <Button
+              rightIcon={<FaRegSave />}
               size="xs"
               colorScheme="green"
               onClick={() => {
@@ -773,6 +845,7 @@ const Inicio = () => {
           </ModalBody>
           <ModalFooter>
             <Button
+              rightIcon={<FaRegTimesCircle />}
               size="xs"
               colorScheme="blue"
               mr={3}
@@ -783,6 +856,7 @@ const Inicio = () => {
               Cerrar
             </Button>
             <Button
+              rightIcon={<FaRegSave />}
               size="xs"
               colorScheme="green"
               onClick={() => {
@@ -800,97 +874,108 @@ const Inicio = () => {
         onClose={() => {
           setModalAranceles(false);
           setMostrarCargaArancel(false);
+          setErrorArancel(false);
         }}
         size="xl"
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>
-            <Text>Aranceles {cursoActual}</Text>
-          </ModalHeader>
           <ModalBody>
+            <Center mb={4}>
+              <strong>EVENTOS {cursoActual}</strong>
+            </Center>
             <Tabla
               columns={columnasAranceles}
               data={datosAranceles}
               customStyles={estiloTablas}
             />
             {mostrarCargaArancel && (
-              <HStack mt={4}>
-                <FormControl>
-                  <FormLabel mb={0} fontSize={10}>
-                    Desde
-                  </FormLabel>
-                  <Input
-                    type="datetime-local"
-                    size="xs"
-                    name="fechaDesdeAranceles"
-                    value={fechaDesdeAranceles}
-                    onChange={(e) => {
-                      setFechaDesdeAranceles(e.target.value);
-                    }}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel mb={0} fontSize={10}>
-                    Hasta
-                  </FormLabel>
-                  <Input
-                    type="datetime-local"
-                    size="xs"
-                    name="fechaHastaAranceles"
-                    value={fechaHastaAranceles}
-                    onChange={(e) => {
-                      setFechaHastaAranceles(e.target.value);
-                    }}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel mb={0} fontSize={10}>
-                    Precio
-                  </FormLabel>
-                  <Input
-                    type="number"
-                    size="xs"
-                    name="precioAranceles"
-                    value={precioAranceles}
-                    onChange={(e) => {
-                      setPrecioAranceles(e.target.value);
-                    }}
-                  />
-                </FormControl>
-                <FormControl>
-                  <FormLabel mb={0} fontSize={10}>
-                    C.U.Mín
-                  </FormLabel>
-                  <Input
-                    type="number"
-                    size="xs"
-                    name="cantidadUnidadesMinima"
-                    value={cantidadUnidadesMinima}
-                    onChange={(e) => {
-                      setCantidadUnidadesMinima(e.target.value);
-                    }}
-                  />
-                </FormControl>
+              <Box>
+                <HStack mt={6} border="solid 1px #F5F4F3" p={4}>
+                  <FormControl>
+                    <FormLabel mb={0} fontSize={10}>
+                      Desde
+                    </FormLabel>
+                    <Input
+                      type="datetime-local"
+                      size="xs"
+                      name="fechaDesdeAranceles"
+                      value={fechaDesdeAranceles}
+                      onChange={(e) => {
+                        setFechaDesdeAranceles(e.target.value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel mb={0} fontSize={10}>
+                      Hasta
+                    </FormLabel>
+                    <Input
+                      type="datetime-local"
+                      size="xs"
+                      name="fechaHastaAranceles"
+                      value={fechaHastaAranceles}
+                      onChange={(e) => {
+                        setFechaHastaAranceles(e.target.value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel mb={0} fontSize={10}>
+                      Precio
+                    </FormLabel>
+                    <Input
+                      type="number"
+                      size="xs"
+                      name="precioAranceles"
+                      value={precioAranceles}
+                      onChange={(e) => {
+                        setPrecioAranceles(e.target.value);
+                      }}
+                    />
+                  </FormControl>
+                  <FormControl>
+                    <FormLabel mb={0} fontSize={10}>
+                      C.U.Mín
+                    </FormLabel>
+                    <Input
+                      type="number"
+                      size="xs"
+                      name="cantidadUnidadesMinima"
+                      value={cantidadUnidadesMinima}
+                      onChange={(e) => {
+                        setCantidadUnidadesMinima(e.target.value);
+                      }}
+                    />
+                  </FormControl>
 
-                <FormControl mb={0}>
-                  <Icon
-                    as={FaRegSave}
-                    w={6}
-                    h={6}
-                    mt={3}
-                    color="blue.400"
-                    cursor="pointer"
-                    onClick={() => {
-                      agregarArancel();
-                    }}
-                  />
-                </FormControl>
-              </HStack>
+                  <FormControl mb={0}>
+                    <Center>
+                      <Icon
+                        as={FaRegSave}
+                        w={6}
+                        h={6}
+                        mt={3}
+                        color="blue.400"
+                        cursor="pointer"
+                        onClick={() => {
+                          agregarArancel();
+                        }}
+                      />
+                    </Center>
+                  </FormControl>
+                </HStack>
+                {errorArancel && (
+                  <Box bg="red.500">
+                    <Center color="white">REVISAR DATOS</Center>
+                  </Box>
+                )}
+              </Box>
             )}
           </ModalBody>
           <ModalFooter>
             <Button
+              rightIcon={<FaPlus />}
               size="xs"
               colorScheme="green"
               onClick={() => {
