@@ -21,6 +21,7 @@ import {
   SimpleGrid,
   Tooltip,
 } from "@chakra-ui/react";
+import GoogleMapReact from "google-map-react";
 import Tabla from "react-data-table-component";
 import clienteAxios from "../config/axios";
 import Moment from "moment";
@@ -34,6 +35,7 @@ import {
   FaSearch,
   FaPlus,
   FaRegTimesCircle,
+  FaSyncAlt,
 } from "react-icons/fa";
 import moment from "moment";
 
@@ -91,6 +93,8 @@ const Inicio = () => {
   const [mostrarCargaArancel, setMostrarCargaArancel] = useState(false);
   const [descripcionError, setDescripcionError] = useState("");
   const [errorArancel, setErrorArancel] = useState(false);
+  const [errorCodigoExiste, setErrorCodigoExiste] = useState(false);
+  const [errorCursoExiste, setErrorCursoExiste] = useState(false);
 
   const columnasConceptos = [
     {
@@ -110,6 +114,22 @@ const Inicio = () => {
       width: "400px",
       wrap: true,
     },
+
+    {
+      name: "",
+      cell: (row) => (
+        <Icon
+          as={FaSyncAlt}
+          color="blue.200"
+          w={5}
+          h={5}
+          cursor="pointer"
+          onClick={() => {}}
+        />
+      ),
+      width: "30px",
+      center: "true",
+    },
   ];
   const columnasCursos = [
     {
@@ -126,7 +146,7 @@ const Inicio = () => {
     {
       name: "Nombre Secundario",
       selector: (row) => row.nombre2,
-      width: "250px",
+      width: "230px",
       wrap: true,
     },
     /*{
@@ -171,7 +191,22 @@ const Inicio = () => {
           }}
         />
       ),
-      width: "50px",
+      width: "30px",
+      center: "true",
+    },
+    {
+      name: "",
+      cell: (row) => (
+        <Icon
+          as={FaSyncAlt}
+          color="blue.200"
+          w={5}
+          h={5}
+          cursor="pointer"
+          onClick={() => {}}
+        />
+      ),
+      width: "30px",
       center: "true",
     },
   ];
@@ -215,7 +250,8 @@ const Inicio = () => {
           h={5}
           cursor="pointer"
           onClick={() => {
-            bajaArancel();
+            bajaArancel(row.IdArancel);
+            console.log(row.IdArancel);
           }}
         />
       ),
@@ -250,12 +286,29 @@ const Inicio = () => {
       },
     },
   };
+
+  /******************************  LIMPIEZA DE FORMULARIOS***************************************** */
+  const limpiarEventos = () => {
+    setCodigoEvento("");
+    setNombreConcepto("");
+    setDescripcionConcepto("");
+  };
+
+  const limpiarCursos = () => {
+    setCodigo("");
+    setNombreCurso("");
+    setNombreSecCurso("");
+    setFechaInicioCurso("");
+    setFechaFinCurso("");
+    setCupoMaximo("");
+    setEmailResp("");
+    setDomicilioRefCurso("");
+    setNombreContactoCurso("");
+  };
   const agregarConcepto = () => {
     if ([codigoEvento, nombreConcepto, descripcionConcepto].includes("")) {
       setError(true);
     } else {
-      setModalConceptos(false);
-      setError(false);
       const objetoConceptos = {
         codigo: codigoEvento,
         Nombre: nombreConcepto,
@@ -264,12 +317,15 @@ const Inicio = () => {
         RequiereValidacionEmail: reqEmailEvento,
       };
       // setDatosConceptos([...datosConceptos, objetoConceptos]);
-
       clienteAxios(`/nuevoevento`, { method: "post", data: objetoConceptos })
         .then((respuesta) => {
           traerEventos();
           setModalConfirmacion(true);
           console.log("Esta es la repsuesta:", respuesta);
+          setError(false);
+          setErrorCodigoExiste(false);
+          limpiarEventos();
+          setModalConceptos(false);
         })
         .catch((error) => {
           console.log("Este es el error:", error);
@@ -341,6 +397,7 @@ const Inicio = () => {
         .then((respuesta) => {
           traerCursos(eventoSeleccionado);
           setModalConfirmacion(true);
+          limpiarCursos();
           console.log("Esta es la repsuesta:", respuesta);
         })
         .catch((error) => {
@@ -368,9 +425,9 @@ const Inicio = () => {
     clienteAxios
       .get("/grupocurso")
       .then((respuesta) => {
-        console.log(respuesta.data);
+        //console.log(respuesta.data);
         setDatosConceptos(respuesta.data);
-        console.log(respuesta.data);
+        //console.log(respuesta.data);
       })
       .catch(() => {});
   };
@@ -379,9 +436,7 @@ const Inicio = () => {
     clienteAxios
       .get("/grupocurso")
       .then((respuesta) => {
-        console.log(respuesta.data);
         setDatosConceptos(respuesta.data);
-        console.log(respuesta.data);
       })
       .catch(() => {});
   }, []);
@@ -463,8 +518,23 @@ const Inicio = () => {
     setPrecioAranceles("");
     setCantidadUnidadesMinima("");
   };
-  const bajaArancel = () => {
-    console.log("COMENZAMOS LA BAJA DE ARANCEL");
+  const bajaArancel = (IdArancel) => {
+    console.log("COMENZAMOS LA BAJA DE ARANCEL", IdArancel);
+
+    const obj = {
+      IdArancel: IdArancel,
+    };
+
+    console.log("objeto arancel para mandar:", obj);
+    clienteAxios
+      .delete("/bajaarancel", { method: "delete", data: obj })
+      .then((respuesta) => {
+        console.log(respuesta);
+        traerAranceles(cursoActual);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   const traerInformacion = (idCurso) => {
@@ -492,13 +562,46 @@ const Inicio = () => {
       })
       .catch(() => {});
   };
+  /************************VALIDACIONES*******************************/
+
+  const validarCodigoEvento = () => {
+    clienteAxios
+      .get(`/eventoexiste/${codigoEvento}`)
+      .then((respuesta) => {
+        console.log("esta es la repsuesta :", respuesta.data);
+        if (respuesta.data.length === 0) {
+          console.log("se puede usar");
+          setErrorCodigoExiste(false);
+        } else {
+          setErrorCodigoExiste(true);
+          console.log("No se puede usar");
+        }
+      })
+      .catch(() => {});
+  };
+
+  const validarCodigoCurso = () => {
+    clienteAxios
+      .get(`/cursoexiste/${codigo}`)
+      .then((respuesta) => {
+        console.log("esta es la repsuesta :", respuesta.data);
+        if (respuesta.data.length === 0) {
+          console.log("se puede usar");
+          setErrorCursoExiste(false);
+        } else {
+          setErrorCursoExiste(true);
+          console.log("No se puede usar");
+        }
+      })
+      .catch(() => {});
+  };
 
   return (
     <>
       <Box mt={3} w="80%" mx="auto" p={3}>
         <Box border="solid 1px #F5F4F3" p={4} mb={2}>
           <Center mb={4}>
-            <strong>EVENTOS</strong>
+            <strong>EVENTOS / GRUPO DE CONCEPTOS</strong>
           </Center>
           <SimpleGrid columns={2} w="300px">
             <Input
@@ -547,7 +650,7 @@ const Inicio = () => {
         <SimpleGrid columns={2} spacing={2}>
           <Box height="auto" p={4} border="solid 1px #F5F4F3">
             <Center mb={4}>
-              <strong>CURSOS</strong>
+              <strong>CURSOS / CONCEPTOS</strong>
             </Center>
             <Tabla
               highlightOnHover
@@ -581,6 +684,24 @@ const Inicio = () => {
               <Box>
                 <SimpleGrid columns={2}>
                   <Box>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> Nombre cCurso : </strong>
+                        {infoCurso[0].nombre1}
+                      </FormLabel>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> Nombre Secundario : </strong>
+                        {infoCurso[0].nombre2}
+                      </FormLabel>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> Codigo : </strong>
+                        {infoCurso[0].codigo}
+                      </FormLabel>
+                    </FormControl>
                     <FormControl>
                       <FormLabel fontSize={12}>
                         <strong> Fecha Inicio : </strong>
@@ -620,11 +741,17 @@ const Inicio = () => {
                         {infoCurso[0].NombreContactoReferencia}
                       </FormLabel>
                     </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> Ubicacion : </strong>
+                        [**UBICAICON DE GOOGLE MAPS**]
+                      </FormLabel>
+                    </FormControl>
                   </Box>
                 </SimpleGrid>
               </Box>
             ) : null}
-            {console.log("este es info curso", infoCurso)}{" "}
+
             <Tabla
               columns={columnasAranceles}
               data={datosAranceles}
@@ -634,13 +761,15 @@ const Inicio = () => {
           </Box>
         </SimpleGrid>
       </Box>
-
+      {/*Modal cursos*/}
       <Modal
         isOpen={modalCursos}
         onClose={() => {
           setModalCursos(false);
           setError(false);
           setErrorFechas(false);
+          setErrorCursoExiste(false);
+          limpiarCursos();
         }}
         size="xl"
       >
@@ -661,13 +790,18 @@ const Inicio = () => {
                 <Center color="white">FECHAS INVALIDAS</Center>
               </Box>
             )}
-
+            {errorCursoExiste && (
+              <Box bg="red.500">
+                <Center color="white">EL CODIGO YA SE ENCUENTRA CARGADO</Center>
+              </Box>
+            )}
             <FormControl mb={2}>
               <FormLabel fontSize={12}>Código</FormLabel>
               <Input
                 maxLength={10}
                 size="xs"
                 name="codigo"
+                onBlur={validarCodigoCurso}
                 value={codigo}
                 onChange={(e) => {
                   setCodigo(e.target.value.toUpperCase());
@@ -779,6 +913,7 @@ const Inicio = () => {
               Cerrar
             </Button>
             <Button
+              disabled={errorCursoExiste}
               rightIcon={<FaRegSave />}
               size="xs"
               colorScheme="green"
@@ -791,11 +926,14 @@ const Inicio = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      {/*Modal conceptos*/}
       <Modal
         isOpen={modalConceptos}
         onClose={() => {
           setModalConceptos(false);
           setError(false);
+          setErrorCodigoExiste(false);
+          limpiarEventos();
         }}
       >
         <ModalOverlay />
@@ -808,6 +946,11 @@ const Inicio = () => {
                 <Center color="white">TODOS LOS CAMPOS SON OBLIGATORIOS</Center>
               </Box>
             )}
+            {errorCodigoExiste && (
+              <Box bg="red.500">
+                <Center color="white">EL CODIGO YA SE ENCUENTRA CARGADO</Center>
+              </Box>
+            )}
             <FormControl mb={2}>
               <FormLabel fontSize={12}> Codigo</FormLabel>
               <Input
@@ -815,6 +958,7 @@ const Inicio = () => {
                 size="xs"
                 name="codigoEvento"
                 value={codigoEvento}
+                onBlur={validarCodigoEvento}
                 onChange={(e) => {
                   setCodigoEvento(e.target.value.toUpperCase());
                 }}
@@ -856,6 +1000,7 @@ const Inicio = () => {
               Cerrar
             </Button>
             <Button
+              disabled={errorCodigoExiste}
               rightIcon={<FaRegSave />}
               size="xs"
               colorScheme="green"
@@ -868,7 +1013,7 @@ const Inicio = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
+      {/*Modal aranceles*/}
       <Modal
         isOpen={modalAranceles}
         onClose={() => {
@@ -987,6 +1132,8 @@ const Inicio = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/*Modal Confirmacion*/}
       <Modal
         isOpen={modalConfirmacion}
         onClose={() => {
@@ -1016,7 +1163,7 @@ const Inicio = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-
+      {/*Modal error*/}
       <Modal
         isOpen={modalError}
         onClose={() => {
