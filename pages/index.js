@@ -100,6 +100,8 @@ const Inicio = () => {
   const [errorCursoExiste, setErrorCursoExiste] = useState(false);
   const [mostrarBotonActualizarEvento, setMostrarBotonActualizarEvento] =
     useState(false);
+  const [mostrarBotonActualizarCurso, setMostrarBotonActualizarCurso] =
+    useState(false);
   const [baseUrl, setBaseUrl] = useState("");
   const columnasConceptos = [
     {
@@ -215,7 +217,24 @@ const Inicio = () => {
           w={5}
           h={5}
           cursor="pointer"
-          onClick={() => {}}
+          onClick={() => {
+            console.log(moment(row.fechaInicio).format("yyyy-MM-DDThh:mm"));
+            console.log(row.fechaFin);
+            setCursoActual(row.idCurso);
+            setCodigo(row.codigo);
+            setFechaInicioCurso(
+              moment(row.fechaInicio).format("yyyy-MM-DDThh:mm")
+            );
+            setFechaFinCurso(moment(row.fechaFin).format("yyyy-MM-DDThh:mm"));
+            setNombreCurso(row.nombre1);
+            setNombreSecCurso(row.nombre2);
+            setCupoMaximo(row.cupoMaximo);
+            setEmailResp(row.mailReferencia);
+            setDomicilioRefCurso(row.domicilioReferencia);
+            setNombreContactoCurso(row.NombreContactoReferencia);
+            setModalCursos(true);
+            setMostrarBotonActualizarCurso(true);
+          }}
         />
       ),
       width: "30px",
@@ -345,6 +364,47 @@ const Inicio = () => {
     }
   };
 
+  const actualizarCurso = () => {
+    const objetoCursos = {
+      idCurso: cursoActual,
+      nombre1: nombreCurso,
+      nombre2: nombreSecCurso,
+      codigo: codigo,
+      idGrupoCurso: idGrupoCurso,
+      fechaInicio: new Date(fechaInicioCurso),
+      fechaFin: new Date(fechaFinCurso),
+      cupoMaximo: cupoMaximo,
+      habilitado: habilitadoCurso,
+      resaltar: resaltar,
+      codUnidadAcademica: codUnidadAcademica,
+      idPrograma: idPrograma,
+      idPlanEstudio: idPlanEstudio,
+      idObligacion: idObligacion,
+      mailReferencia: emailResp,
+      domicilioReferencia: domicilioRefCurso,
+      NombreContactoReferencia: nombreContactoCurso,
+      urlUbicacion: urlUbicacionCurso,
+      RequiereValidacionEmail: reqEmailCurso,
+    };
+
+    console.log("ENTRO A ACTUALIZAR CURSOOO", objetoCursos);
+    clienteAxios(`/actualizarcurso`, {
+      method: "post",
+      data: objetoCursos,
+    })
+      .then((respuesta) => {
+        console.log("Se Actualizo CURSO::::::", respuesta);
+        traerCursos(eventoSeleccionado);
+        setModalConfirmacion(true);
+        limpiarCursos();
+        setErrorCursoExiste(false);
+        setModalCursos(false);
+      })
+      .catch((error) => {
+        console.log("ERROR", error);
+      });
+  };
+
   const actualizarConcepto = () => {
     if ([nombreConcepto, descripcionConcepto].includes("")) {
       setError(true);
@@ -438,6 +498,7 @@ const Inicio = () => {
           traerCursos(eventoSeleccionado);
           setModalConfirmacion(true);
           limpiarCursos();
+          tra;
           console.log("Esta es la repsuesta:", respuesta);
         })
         .catch((error) => {
@@ -501,18 +562,61 @@ const Inicio = () => {
       .catch(() => {});
   };
 
+  /************************************ VALIDAR FECHAS PARA ARANCELES *************************************************/
+
   const validarFechaArancel = () => {
-    if (
-      moment(fechaDesdeAranceles).format("YYYY-MM-DD") >
-        moment(fechaHastaAranceles).format("YYYY-MM-DD") ||
-      fechaDesdeAranceles === "" ||
-      fechaHastaAranceles === ""
-    ) {
-      setErrorArancel(true);
-      return false;
+    console.log("DATOS ARANCELES:", datosAranceles);
+    var val = cursoActual;
+    var index = datosAranceles.findIndex(function (item, i) {
+      return item.idCurso === val;
+    });
+
+    console.log("CANTIDAD:", index);
+    console.log("Longitud:", datosAranceles.length);
+    console.log("VALOR DEL INDEX:", index);
+    console.log(
+      "FECHAS A VALIDAR:",
+      "Desde",
+      fechaDesdeAranceles,
+      "Hasta",
+      fechaHastaAranceles
+    );
+
+    const nuevaFechaDesde = fechaDesdeAranceles;
+    const nuevaFechaHasta = fechaHastaAranceles;
+
+    if (datosAranceles.length !== 0) {
+      const ultimaFechaDesde =
+        datosAranceles[datosAranceles.length - 1].FechaDesde;
+      const UltimaFechaHasta =
+        datosAranceles[datosAranceles.length - 1].FechaHasta;
+      if (
+        moment(fechaDesdeAranceles).format("YYYY-MM-DD") >
+          moment(fechaHastaAranceles).format("YYYY-MM-DD") ||
+        fechaDesdeAranceles === "" ||
+        fechaHastaAranceles === "" ||
+        nuevaFechaDesde <= UltimaFechaHasta ||
+        nuevaFechaHasta < nuevaFechaDesde
+      ) {
+        setErrorArancel(true);
+        return false;
+      } else {
+        setErrorArancel(false);
+        return true;
+      }
     } else {
-      setErrorArancel(false);
-      return true;
+      if (
+        moment(fechaDesdeAranceles).format("YYYY-MM-DD") >
+          moment(fechaHastaAranceles).format("YYYY-MM-DD") ||
+        fechaDesdeAranceles === "" ||
+        fechaHastaAranceles === ""
+      ) {
+        setErrorArancel(true);
+        return false;
+      } else {
+        setErrorArancel(false);
+        return true;
+      }
     }
   };
 
@@ -837,6 +941,7 @@ const Inicio = () => {
           setErrorFechas(false);
           setErrorCursoExiste(false);
           limpiarCursos();
+          setMostrarBotonActualizarCurso(false);
         }}
         size="xl"
       >
@@ -967,6 +1072,18 @@ const Inicio = () => {
           </ModalBody>
           <ModalFooter>
             <Button
+              disabled={mostrarBotonActualizarCurso === false}
+              rightIcon={<FaRegTimesCircle />}
+              size="xs"
+              colorScheme="gray"
+              mr={3}
+              onClick={() => {
+                actualizarCurso();
+              }}
+            >
+              Actualizar
+            </Button>
+            <Button
               rightIcon={<FaRegTimesCircle />}
               size="xs"
               colorScheme="blue"
@@ -975,12 +1092,15 @@ const Inicio = () => {
                 setModalCursos(!modalCursos);
                 setError(false);
                 setErrorFechas(false);
+                setMostrarBotonActualizarCurso(false);
               }}
             >
               Cerrar
             </Button>
             <Button
-              disabled={errorCursoExiste}
+              disabled={
+                errorCursoExiste || mostrarBotonActualizarCurso === true
+              }
               rightIcon={<FaRegSave />}
               size="xs"
               colorScheme="green"
