@@ -22,6 +22,9 @@ import {
   Tooltip,
   Link,
   ExternalLinkIcon,
+  Select,
+  Stack,
+  Checkbox,
 } from "@chakra-ui/react";
 import GoogleMapReact from "google-map-react";
 import Tabla from "react-data-table-component";
@@ -38,6 +41,7 @@ import {
   FaPlus,
   FaRegTimesCircle,
   FaSyncAlt,
+  FaRegCreditCard,
 } from "react-icons/fa";
 import moment from "moment";
 
@@ -84,6 +88,12 @@ const Inicio = () => {
   const [fechaHastaAranceles, setFechaHastaAranceles] = useState("");
   const [precioAranceles, setPrecioAranceles] = useState(0);
   const [cantidadUnidadesMinima, setCantidadUnidadesMinima] = useState(0);
+
+  //FORMAS DE PAGO
+  const [modalFormaPago, setModalFormaPago] = useState(false);
+  const [datosFormasDePago, setDatosFormasDePago] = useState([]);
+  const [formasDePagoAGuardar, setFormasDePagoAGuardar] = useState([]);
+  const formasDepago = [];
 
   //OTROS
   const [modalConfirmacion, setModalConfirmacion] = useState(false);
@@ -138,6 +148,29 @@ const Inicio = () => {
             setDescripcionConcepto(row.descripcion);
             setModalConceptos(true);
             setMostrarBotonActualizarEvento(true);
+          }}
+        />
+      ),
+      width: "30px",
+      center: "true",
+    },
+    {
+      name: "",
+      cell: (row) => (
+        <Icon
+          as={FaRegCreditCard}
+          color="orange.200"
+          w={5}
+          h={5}
+          cursor="pointer"
+          onClick={() => {
+            setModalFormaPago(true);
+            //  setEventoActual(row.idGrupo);
+            //  setCodigoEvento(row.codigo);
+            // setNombreConcepto(row.Nombre);
+            // setDescripcionConcepto(row.descripcion);
+            // setModalConceptos(true);
+            // setMostrarBotonActualizarEvento(true);
           }}
         />
       ),
@@ -290,6 +323,13 @@ const Inicio = () => {
       center: "true",
     },
   ];
+
+  const columnasFormaPago = [
+    {
+      name: "Descripcion",
+    },
+  ];
+
   const estiloTablas = {
     rowgroup: {
       style: {
@@ -344,19 +384,36 @@ const Inicio = () => {
         codigo: codigoEvento,
         Nombre: nombreConcepto,
         descripcion: descripcionConcepto,
-        habilitadoEvento: habilitadoEvento,
+        habilitado: habilitadoEvento,
         RequiereValidacionEmail: reqEmailEvento,
       };
+
       // setDatosConceptos([...datosConceptos, objetoConceptos]);
       clienteAxios(`/nuevoevento`, { method: "post", data: objetoConceptos })
         .then((respuesta) => {
           traerEventos();
           setModalConfirmacion(true);
-          console.log("Esta es la repsuesta:", respuesta);
+          console.log("Esta es la repsuesta:", respuesta.data.idGrupo);
           setError(false);
           setErrorCodigoExiste(false);
           limpiarEventos();
           setModalConceptos(false);
+
+          const objetoFormaPago = {
+            idGrupo: respuesta.data.idGrupo,
+            idFormaPago: 4,
+          };
+
+          clienteAxios(`/nuevogrupocursoformaspago`, {
+            method: "post",
+            data: objetoFormaPago,
+          })
+            .then((respuesta) => {
+              console.log(respuesta);
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         })
         .catch((error) => {
           console.log("Este es el error:", error);
@@ -511,6 +568,7 @@ const Inicio = () => {
     traerCursos(row.idGrupo);
     traerAranceles(0);
     traerInformacion(0);
+    traerFormasPagoxEvento(row.idGrupo);
     setEventoSeleccionado(row.idGrupo);
     setIdGrupoCurso(row.idGrupo);
     console.log("ESTE ES EL ID GRUPO:", row.idGrupo);
@@ -596,7 +654,11 @@ const Inicio = () => {
         fechaDesdeAranceles === "" ||
         fechaHastaAranceles === "" ||
         nuevaFechaDesde <= UltimaFechaHasta ||
-        nuevaFechaHasta < nuevaFechaDesde
+        nuevaFechaHasta < nuevaFechaDesde ||
+        precioAranceles < 1 ||
+        precioAranceles === "" ||
+        cantidadUnidadesMinima === "" ||
+        cantidadUnidadesMinima < 1
       ) {
         setErrorArancel(true);
         return false;
@@ -609,7 +671,11 @@ const Inicio = () => {
         moment(fechaDesdeAranceles).format("YYYY-MM-DD") >
           moment(fechaHastaAranceles).format("YYYY-MM-DD") ||
         fechaDesdeAranceles === "" ||
-        fechaHastaAranceles === ""
+        fechaHastaAranceles === "" ||
+        precioAranceles < 1 ||
+        precioAranceles === "" ||
+        cantidadUnidadesMinima === "" ||
+        cantidadUnidadesMinima < 1
       ) {
         setErrorArancel(true);
         return false;
@@ -647,6 +713,7 @@ const Inicio = () => {
           setModalConfirmacion(true);
           limpiarAranceles();
           traerAranceles(cursoActual);
+          setErrorArancel(false);
           console.log("SE REALIZO EL ALTA", respuesta);
         })
         .catch((error) => {
@@ -691,7 +758,9 @@ const Inicio = () => {
         console.log("Informacion", respuesta.data);
         setInfoCurso(respuesta.data);
       })
-      .catch(() => {});
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   const traerParametro = () => {
@@ -704,6 +773,32 @@ const Inicio = () => {
       })
       .catch((error) => {
         console.log("este es el error de parametro::", error);
+      });
+  };
+
+  const traerFormasDePago = () => {
+    console.log("entro a traer las formas de pago");
+
+    clienteAxios
+      .get("/traerformasdepago")
+      .then((respuesta) => {
+        setDatosFormasDePago(respuesta.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const traerFormasPagoxEvento = (idGrupo) => {
+    console.log("LLAMAMOS A TRAER FORMAS PAGO X EVENTO");
+    clienteAxios
+      .get(`/formaspagoxevento/${idGrupo}`)
+      .then((respuesta) => {
+        console.log(respuesta.data);
+        setDatosFormasDePago(respuesta.data);
+      })
+      .catch((error) => {
+        console.log(error);
       });
   };
 
@@ -845,7 +940,7 @@ const Inicio = () => {
                   <Box>
                     <FormControl>
                       <FormLabel fontSize={12}>
-                        <strong> Nombre cCurso : </strong>
+                        <strong> Nombre Curso : </strong>
                         {infoCurso[0].nombre1}
                       </FormLabel>
                     </FormControl>
@@ -900,12 +995,13 @@ const Inicio = () => {
                         {infoCurso[0].NombreContactoReferencia}
                       </FormLabel>
                     </FormControl>
-                    <FormControl>
+                    {/* <FormControl>
                       <FormLabel fontSize={12}>
                         <strong> Ubicacion : </strong>
                         [**UBICAICON DE GOOGLE MAPS**]
                       </FormLabel>
-                    </FormControl>
+            </FormControl>*/}
+
                     <FormControl>
                       <FormLabel fontSize={12}>
                         <strong> URL : </strong>
@@ -917,6 +1013,22 @@ const Inicio = () => {
                           {baseUrl + infoCurso[0].codigo}
                         </Link>
                       </FormLabel>
+                    </FormControl>
+                    <FormControl>
+                      <FormLabel fontSize={12}>Formas de pago</FormLabel>
+                      <Select size="xs">
+                        {datosFormasDePago.map(
+                          ({ idGrupo, idFormaPago, FormasPago }) => (
+                            <option
+                              key={idFormaPago}
+                              value={idGrupo}
+                              style={{ color: "black" }}
+                            >
+                              {FormasPago.nombre}
+                            </option>
+                          )
+                        )}
+                      </Select>
                     </FormControl>
                   </Box>
                 </SimpleGrid>
@@ -970,6 +1082,7 @@ const Inicio = () => {
             <FormControl mb={2}>
               <FormLabel fontSize={12}>Código</FormLabel>
               <Input
+                disabled={mostrarBotonActualizarCurso === true}
                 maxLength={10}
                 size="xs"
                 name="codigo"
@@ -1209,9 +1322,7 @@ const Inicio = () => {
               rightIcon={<FaRegSave />}
               size="xs"
               colorScheme="green"
-              onClick={() => {
-                agregarConcepto();
-              }}
+              onClick={() => {}}
             >
               Guardar
             </Button>
@@ -1335,6 +1446,27 @@ const Inicio = () => {
               Nuevo Arancel
             </Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/************  MODAL FORMA PAGO  ***************************/}
+
+      <Modal
+        isOpen={modalFormaPago}
+        onClose={() => {
+          setModalFormaPago(false);
+        }}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalBody>
+            <p>Modal de forma de pago </p>
+            <Tabla
+              columns={columnasAranceles}
+              data={datosFormasDePago}
+              customStyles={estiloTablas}
+            />
+          </ModalBody>
         </ModalContent>
       </Modal>
 
