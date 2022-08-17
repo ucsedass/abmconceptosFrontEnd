@@ -42,6 +42,8 @@ import {
   FaRegTimesCircle,
   FaSyncAlt,
   FaRegCreditCard,
+  FaRegThumbsDown,
+  FaRegThumbsUp,
 } from "react-icons/fa";
 import moment from "moment";
 
@@ -92,6 +94,7 @@ const Inicio = () => {
   //FORMAS DE PAGO
   const [modalFormaPago, setModalFormaPago] = useState(false);
   const [datosFormasDePago, setDatosFormasDePago] = useState([]);
+  const [datosTodasFormasDePago, setDatosTodasFormasDePago] = useState([]);
   const [formasDePagoAGuardar, setFormasDePagoAGuardar] = useState([]);
   const formasDepago = [];
 
@@ -164,8 +167,10 @@ const Inicio = () => {
           h={5}
           cursor="pointer"
           onClick={() => {
+            traerFormasPagoxEvento(row.idGrupo);
+            traerFormasDePago();
             setModalFormaPago(true);
-            //  setEventoActual(row.idGrupo);
+            setEventoActual(row.idGrupo);
             //  setCodigoEvento(row.codigo);
             // setNombreConcepto(row.Nombre);
             // setDescripcionConcepto(row.descripcion);
@@ -326,7 +331,32 @@ const Inicio = () => {
 
   const columnasFormaPago = [
     {
-      name: "Descripcion",
+      selector: (row) => row.FormasPago.nombre,
+    },
+  ];
+
+  const columnasTodasFormaPago = [
+    {
+      selector: (row) => row.nombre,
+    },
+    {
+      name: "",
+      cell: (row) => (
+        <Icon
+          as={FaRegThumbsUp}
+          color="green.400"
+          w={3}
+          h={3}
+          cursor="pointer"
+          onClick={() => {
+            agregarGrupoCursoFormasPago(row.idFormaPago);
+
+            traerFormasPagoxEvento(eventoActual);
+            setModalConfirmacion(true);
+            setModalFormaPago(false);
+          }}
+        />
+      ),
     },
   ];
 
@@ -419,6 +449,24 @@ const Inicio = () => {
           console.log("Este es el error:", error);
         });
     }
+  };
+
+  const agregarGrupoCursoFormasPago = (fp) => {
+    const objetoFormaPago = {
+      idGrupo: eventoActual,
+      idFormaPago: parseInt(fp),
+    };
+
+    clienteAxios(`/nuevogrupocursoformaspago`, {
+      method: "post",
+      data: objetoFormaPago,
+    })
+      .then((respuesta) => {
+        console.log(respuesta);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   const actualizarCurso = () => {
@@ -782,7 +830,8 @@ const Inicio = () => {
     clienteAxios
       .get("/traerformasdepago")
       .then((respuesta) => {
-        setDatosFormasDePago(respuesta.data);
+        setDatosTodasFormasDePago(respuesta.data);
+        console.log("ESTAS SON LAS FORMAS DE PAGO ::", respuesta.data);
       })
       .catch((error) => {
         console.log(error);
@@ -1322,7 +1371,9 @@ const Inicio = () => {
               rightIcon={<FaRegSave />}
               size="xs"
               colorScheme="green"
-              onClick={() => {}}
+              onClick={() => {
+                agregarConcepto();
+              }}
             >
               Guardar
             </Button>
@@ -1460,11 +1511,21 @@ const Inicio = () => {
         <ModalOverlay />
         <ModalContent>
           <ModalBody>
-            <p>Modal de forma de pago </p>
-            <Tabla
-              columns={columnasAranceles}
+            <Center mb={1}>
+              <strong>AGREGAR FORMAS DE PAGO</strong>
+            </Center>
+            {/*<Tabla
+              columns={columnasFormaPago}
               data={datosFormasDePago}
               customStyles={estiloTablas}
+              noDataComponent="No hay formas de pago"
+      />*/}
+
+            <Tabla
+              columns={columnasTodasFormaPago}
+              data={datosTodasFormasDePago}
+              customStyles={estiloTablas}
+              noDataComponent="No hay formas de pago"
             />
           </ModalBody>
         </ModalContent>
