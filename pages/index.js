@@ -350,7 +350,6 @@ const Inicio = () => {
           cursor="pointer"
           onClick={() => {
             agregarGrupoCursoFormasPago(row.idFormaPago);
-
             traerFormasPagoxEvento(eventoActual);
             setModalConfirmacion(true);
             setModalFormaPago(false);
