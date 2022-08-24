@@ -99,6 +99,7 @@ const Inicio = () => {
   const formasDepago = [];
 
   //OTROS
+  const [modalSecundaria, setModalSecundaria] = useState(false);
   const [modalConfirmacion, setModalConfirmacion] = useState(false);
   const [modalError, setModalError] = useState(false);
   const [modalActualizarEvento, setModalActualizarEvento] = useState(false);
@@ -612,6 +613,7 @@ const Inicio = () => {
   };
 
   const clickear = (row) => {
+    setModalSecundaria(true);
     traerCursos(row.idGrupo);
     traerAranceles(0);
     traerInformacion(0);
@@ -948,149 +950,6 @@ const Inicio = () => {
             Agregar evento
           </Button>
         </Box>
-        <SimpleGrid columns={2} spacing={2}>
-          <Box height="auto" p={4} border="solid 1px #F5F4F3">
-            <Center mb={4}>
-              <strong>CURSOS / CONCEPTOS</strong>
-            </Center>
-            <Tabla
-              highlightOnHover
-              pointerOnHover
-              columns={columnasCursos}
-              data={datosCursos}
-              customStyles={estiloTablas}
-              onRowClicked={clikearCursos}
-              noDataComponent="No hay cursos"
-            />
-
-            <Box mt={5}>
-              <Button
-                disabled={eventoSeleccionado === 0}
-                rightIcon={<FaPlus />}
-                colorScheme="orange"
-                size="xs"
-                onClick={() => {
-                  console.log("ESTE ES EL EVENTO : ", eventoActual);
-                  setModalCursos(true);
-                }}
-              >
-                Agregar curso
-              </Button>
-            </Box>
-          </Box>
-          <Box p={4} border="solid 1px #F5F4F3">
-            <Center mb={4}>
-              <strong>INFORMACION</strong>
-            </Center>
-            {infoCurso[0] !== undefined ? (
-              <Box>
-                <SimpleGrid columns={2}>
-                  <Box>
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> Nombre Curso : </strong>
-                        {infoCurso[0].nombre1}
-                      </FormLabel>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> Nombre Secundario : </strong>
-                        {infoCurso[0].nombre2}
-                      </FormLabel>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> Codigo : </strong>
-                        {infoCurso[0].codigo}
-                      </FormLabel>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> Fecha Inicio : </strong>
-                        {moment(infoCurso[0].fechaInicio).format("DD-MM-YYYY")}
-                      </FormLabel>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong>Fecha Fin : </strong>
-                        {moment(infoCurso[0].fechaFin).format("DD-MM-YYYY")}
-                      </FormLabel>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> Cupo Maximo : </strong>
-                        {infoCurso[0].cupoMaximo}
-                      </FormLabel>
-                    </FormControl>
-                  </Box>
-
-                  <Box>
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> E-mail : </strong>
-                        {infoCurso[0].mailReferencia}
-                      </FormLabel>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> Domicilio : </strong>
-                        {infoCurso[0].domicilioReferencia}
-                      </FormLabel>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> Contacto : </strong>
-                        {infoCurso[0].NombreContactoReferencia}
-                      </FormLabel>
-                    </FormControl>
-                    {/* <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> Ubicacion : </strong>
-                        [**UBICAICON DE GOOGLE MAPS**]
-                      </FormLabel>
-            </FormControl>*/}
-
-                    <FormControl>
-                      <FormLabel fontSize={12}>
-                        <strong> URL : </strong>
-                        <Link
-                          color="blue.300"
-                          href={baseUrl + infoCurso[0].codigo}
-                          isExternal
-                        >
-                          {baseUrl + infoCurso[0].codigo}
-                        </Link>
-                      </FormLabel>
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel fontSize={12}>Formas de pago</FormLabel>
-                      <Select size="xs">
-                        {datosFormasDePago.map(
-                          ({ idGrupo, idFormaPago, FormasPago }) => (
-                            <option
-                              key={idFormaPago}
-                              value={idGrupo}
-                              style={{ color: "black" }}
-                            >
-                              {FormasPago.nombre}
-                            </option>
-                          )
-                        )}
-                      </Select>
-                    </FormControl>
-                  </Box>
-                </SimpleGrid>
-              </Box>
-            ) : null}
-
-            <Tabla
-              columns={columnasAranceles}
-              data={datosAranceles}
-              customStyles={estiloTablas}
-              noDataComponent="No hay aranceles"
-            />
-          </Box>
-        </SimpleGrid>
       </Box>
       {/*Modal cursos*/}
       <Modal
@@ -1582,6 +1441,177 @@ const Inicio = () => {
               Aceptar
             </Button>
           </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        size="full"
+        isOpen={modalSecundaria}
+        onClose={() => {
+          setModalSecundaria(false);
+        }}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalBody>
+            <SimpleGrid mt={5} columns={2} spacing={2}>
+              <Box height="auto" p={4} border="solid 1px #F5F4F3">
+                <Center mb={4}>
+                  <strong>CURSOS / CONCEPTOS</strong>
+                </Center>
+                <Tabla
+                  highlightOnHover
+                  pointerOnHover
+                  columns={columnasCursos}
+                  data={datosCursos}
+                  customStyles={estiloTablas}
+                  onRowClicked={clikearCursos}
+                  noDataComponent="No hay cursos"
+                />
+
+                <Box mt={5}>
+                  <Button
+                    disabled={eventoSeleccionado === 0}
+                    rightIcon={<FaPlus />}
+                    colorScheme="orange"
+                    size="xs"
+                    onClick={() => {
+                      console.log("ESTE ES EL EVENTO : ", eventoActual);
+                      setModalCursos(true);
+                    }}
+                  >
+                    Agregar curso
+                  </Button>
+                </Box>
+              </Box>
+              <Box p={4} border="solid 1px #F5F4F3">
+                <Center mb={4}>
+                  <strong>INFORMACION</strong>
+                </Center>
+                {infoCurso[0] !== undefined ? (
+                  <Box>
+                    <SimpleGrid columns={2}>
+                      <Box>
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong> Nombre Curso : </strong>
+                            {infoCurso[0].nombre1}
+                          </FormLabel>
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong> Nombre Secundario : </strong>
+                            {infoCurso[0].nombre2}
+                          </FormLabel>
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong> Codigo : </strong>
+                            {infoCurso[0].codigo}
+                          </FormLabel>
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong> Fecha Inicio : </strong>
+                            {moment(infoCurso[0].fechaInicio).format(
+                              "DD-MM-YYYY"
+                            )}
+                          </FormLabel>
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong>Fecha Fin : </strong>
+                            {moment(infoCurso[0].fechaFin).format("DD-MM-YYYY")}
+                          </FormLabel>
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong> Cupo Maximo : </strong>
+                            {infoCurso[0].cupoMaximo}
+                          </FormLabel>
+                        </FormControl>
+                      </Box>
+
+                      <Box>
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong> E-mail : </strong>
+                            {infoCurso[0].mailReferencia}
+                          </FormLabel>
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong> Domicilio : </strong>
+                            {infoCurso[0].domicilioReferencia}
+                          </FormLabel>
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong> Contacto : </strong>
+                            {infoCurso[0].NombreContactoReferencia}
+                          </FormLabel>
+                        </FormControl>
+                        {/* <FormControl>
+                      <FormLabel fontSize={12}>
+                        <strong> Ubicacion : </strong>
+                        [**UBICAICON DE GOOGLE MAPS**]
+                      </FormLabel>
+            </FormControl>*/}
+
+                        <FormControl>
+                          <FormLabel fontSize={12}>
+                            <strong> URL : </strong>
+                            <Link
+                              color="blue.300"
+                              href={baseUrl + infoCurso[0].codigo}
+                              isExternal
+                            >
+                              {baseUrl + infoCurso[0].codigo}
+                            </Link>
+                          </FormLabel>
+                        </FormControl>
+                        <FormControl>
+                          <FormLabel fontSize={12}>Formas de pago</FormLabel>
+                          <Select size="xs">
+                            {datosFormasDePago.map(
+                              ({ idGrupo, idFormaPago, FormasPago }) => (
+                                <option
+                                  key={idFormaPago}
+                                  value={idGrupo}
+                                  style={{ color: "black" }}
+                                >
+                                  {FormasPago.nombre}
+                                </option>
+                              )
+                            )}
+                          </Select>
+                        </FormControl>
+                      </Box>
+                    </SimpleGrid>
+                  </Box>
+                ) : null}
+
+                <Tabla
+                  columns={columnasAranceles}
+                  data={datosAranceles}
+                  customStyles={estiloTablas}
+                  noDataComponent="No hay aranceles"
+                />
+              </Box>
+            </SimpleGrid>
+
+            <Button
+              mt={3}
+              size="xs"
+              colorScheme="green"
+              w="100%"
+              onClick={() => {
+                setModalSecundaria(false);
+              }}
+            >
+              Salir
+            </Button>
+          </ModalBody>
         </ModalContent>
       </Modal>
     </>
