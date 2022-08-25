@@ -25,6 +25,8 @@ import {
   Select,
   Stack,
   Checkbox,
+  Grid,
+  GridItem,
 } from "@chakra-ui/react";
 import GoogleMapReact from "google-map-react";
 import Tabla from "react-data-table-component";
@@ -60,6 +62,7 @@ const Inicio = () => {
   const [idEvento, setIdEvento] = useState(0);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(0);
   const [codigoBuscar, setCodigoBuscar] = useState("");
+  const [infoConcepto, setInfoConcepto] = useState([]);
   //CURSOS
   const [nombreCurso, setNombreCurso] = useState("");
   const [nombreSecCurso, setNombreSecCurso] = useState("");
@@ -613,6 +616,10 @@ const Inicio = () => {
   };
 
   const clickear = (row) => {
+    setEventoActual(row.idGrupo);
+    setCodigoEvento(row.codigo);
+    setNombreConcepto(row.Nombre);
+    setDescripcionConcepto(row.descripcion);
     setModalSecundaria(true);
     traerCursos(row.idGrupo);
     traerAranceles(0);
@@ -942,6 +949,7 @@ const Inicio = () => {
             rightIcon={<FaPlus />}
             mt={5}
             onClick={() => {
+              limpiarEventos();
               setModalConceptos(true);
             }}
             colorScheme="green"
@@ -1141,7 +1149,7 @@ const Inicio = () => {
           setMostrarBotonActualizarEvento(false);
           setError(false);
           setErrorCodigoExiste(false);
-          limpiarEventos();
+          //limpiarEventos();
         }}
       >
         <ModalOverlay />
@@ -1369,7 +1377,7 @@ const Inicio = () => {
         <ModalOverlay />
         <ModalContent>
           <ModalBody>
-            <Center mb={1}>
+            <Center>
               <strong>AGREGAR FORMAS DE PAGO</strong>
             </Center>
             {/*<Tabla
@@ -1454,7 +1462,52 @@ const Inicio = () => {
         <ModalOverlay />
         <ModalContent>
           <ModalBody>
-            <SimpleGrid mt={5} columns={2} spacing={2}>
+            <Box bg={"blue.100"}>
+              <Grid mx="auto" w="80%" templateColumns="repeat(4, 1fr)">
+                <GridItem w="100%" mt={3}>
+                  <FormLabel fontSize={12}>
+                    <strong> Codigo:</strong> {codigoEvento}
+                  </FormLabel>
+                </GridItem>
+                <GridItem w="100%" mt={3}>
+                  <FormLabel fontSize={12}>
+                    <strong>Nombre:</strong> {nombreConcepto}
+                  </FormLabel>
+                </GridItem>
+                <GridItem w="100%" mt={3}>
+                  <FormLabel fontSize={12}>
+                    <strong>Descripcion:</strong> {descripcionConcepto}
+                  </FormLabel>
+                </GridItem>
+                <GridItem w="100%">
+                  <Center>
+                    <Icon
+                      mt={1}
+                      mb={0}
+                      as={FaSyncAlt}
+                      color="blue.500"
+                      w={4}
+                      h={4}
+                      cursor="pointer"
+                      onClick={() => {
+                        // setEventoActual(row.idGrupo);
+                        //setCodigoEvento(row.codigo);
+                        //setNombreConcepto(row.Nombre);
+                        //setDescripcionConcepto(row.descripcion);
+                        setModalConceptos(true);
+                        setMostrarBotonActualizarEvento(true);
+                      }}
+                    />
+                  </Center>
+                  <Center>
+                    <FormLabel fontSize={10} mb={0} mr={0}>
+                      Actualizar concepto
+                    </FormLabel>
+                  </Center>
+                </GridItem>
+              </Grid>
+            </Box>
+            <SimpleGrid mt={2} columns={2} spacing={2}>
               <Box height="auto" p={4} border="solid 1px #F5F4F3">
                 <Center mb={4}>
                   <strong>CURSOS / CONCEPTOS</strong>
@@ -1607,9 +1660,10 @@ const Inicio = () => {
               w="100%"
               onClick={() => {
                 setModalSecundaria(false);
+                limpiarEventos();
               }}
             >
-              Salir
+              Volver
             </Button>
           </ModalBody>
         </ModalContent>
