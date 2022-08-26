@@ -140,6 +140,7 @@ const Inicio = () => {
     },
 
     {
+      /*
       name: "",
       cell: (row) => (
         <Icon
@@ -159,9 +160,10 @@ const Inicio = () => {
         />
       ),
       width: "30px",
-      center: "true",
+      center: "true",*/
     },
     {
+      /*
       name: "",
       cell: (row) => (
         <Icon
@@ -185,6 +187,7 @@ const Inicio = () => {
       ),
       width: "30px",
       center: "true",
+        */
     },
   ];
   const columnasCursos = [
@@ -534,6 +537,7 @@ const Inicio = () => {
           setErrorCodigoExiste(false);
           limpiarEventos();
           setModalConceptos(false);
+          setModalSecundaria(false);
         })
         .catch((error) => {
           console.log("Este es el error", error);
@@ -1463,7 +1467,7 @@ const Inicio = () => {
         <ModalContent>
           <ModalBody>
             <Box bg={"blue.100"}>
-              <Grid mx="auto" w="80%" templateColumns="repeat(4, 1fr)">
+              <Grid mx="auto" w="80%" templateColumns="repeat(5, 1fr)">
                 <GridItem w="100%" mt={3}>
                   <FormLabel fontSize={12}>
                     <strong> Codigo:</strong> {codigoEvento}
@@ -1502,6 +1506,35 @@ const Inicio = () => {
                   <Center>
                     <FormLabel fontSize={10} mb={0} mr={0}>
                       Actualizar concepto
+                    </FormLabel>
+                  </Center>
+                </GridItem>
+                <GridItem>
+                  <Center>
+                    <Icon
+                      mt={1}
+                      mb={0}
+                      as={FaRegCreditCard}
+                      color="orange.500"
+                      w={4}
+                      h={4}
+                      cursor="pointer"
+                      onClick={() => {
+                        //   traerFormasPagoxEvento(row.idGrupo);
+                        traerFormasDePago();
+                        setModalFormaPago(true);
+                        //    setEventoActual(row.idGrupo);
+                        //  setCodigoEvento(row.codigo);*************
+                        // setNombreConcepto(row.Nombre);
+                        // setDescripcionConcepto(row.descripcion);
+                        // setModalConceptos(true);
+                        // setMostrarBotonActualizarEvento(true);
+                      }}
+                    />
+                  </Center>
+                  <Center>
+                    <FormLabel fontSize={10} mb={0} mr={0}>
+                      Agregar formas de pago
                     </FormLabel>
                   </Center>
                 </GridItem>
