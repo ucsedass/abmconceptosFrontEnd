@@ -105,7 +105,7 @@ const Inicio = () => {
   const [modalSecundaria, setModalSecundaria] = useState(false);
   const [modalConfirmacion, setModalConfirmacion] = useState(false);
   const [modalError, setModalError] = useState(false);
-  const [modalActualizarEvento, setModalActualizarEvento] = useState(false);
+
   const [error, setError] = useState(false);
   const [errorFechas, setErrorFechas] = useState(false);
   const [eventoActual, setEventoActual] = useState("");
