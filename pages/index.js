@@ -38,7 +38,6 @@ import {
   FaInfoCircle,
   FaTrashAlt,
   FaMoneyCheckAlt,
-  FaSearchengin,
   FaSearch,
   FaPlus,
   FaRegTimesCircle,
